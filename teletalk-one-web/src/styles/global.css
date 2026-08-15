@@ -1,0 +1,102 @@
+/* reset-ish */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* Explicit token colour underneath — the viewer paints its own ground, so a
+     transparent body would borrow the host theme. The glow sits on top. */
+  background-color: var(--paper);
+  background-image: var(--paper-glow);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--lh-tight);
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Theme swap must not animate.
+   Any property transitioned by a component (.btn animates background-color for
+   hover) is also driven by a theme token. When the token changes, the browser
+   starts a transition from the OLD theme's value — and can be left holding it,
+   which shows a light-theme button on a dark-theme page. Suppressing
+   transitions for the frame in which the theme flips avoids the whole class of
+   bug rather than one instance of it. */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Identifiers: POS code, MSISDN, OTP, SIM serial, txn ID.
+   Latin digits in every locale, monospaced so they can be read back aloud. */
+.identifier {
+  font-family: var(--font-id);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

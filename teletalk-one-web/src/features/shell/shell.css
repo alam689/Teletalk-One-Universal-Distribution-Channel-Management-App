@@ -1,0 +1,340 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* -------------------------------- topbar ------------------------------ */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-6));
+  padding-top: max(var(--space-3), env(safe-area-inset-top));
+  /* Frosted rather than solid, so the mint ground reads through on scroll. */
+  background-color: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-block-end: 1px solid var(--rule-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  margin-inline-start: calc(var(--space-2) * -1);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  /* Shrinkable with a floor, so the bar degrades instead of overflowing. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* The outlet name cannot fit beside a three-item nav below 900px; the account
+   menu shows it in full. Without this the action group overflows the viewport. */
+@media (max-width: 900px) {
+  .account__name {
+    display: none;
+  }
+}
+
+.topbar__wordmark {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--brand);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+
+.topbar__pos {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Desktop primary nav; the mobile equivalent is .bottomnav */
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: var(--space-4);
+}
+
+.topnav__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.topnav__link:hover {
+  background: var(--surface-2);
+}
+
+.topnav__link.is-active {
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.iconbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.iconbtn:hover {
+  background: var(--surface-2);
+}
+
+.iconbtn__badge {
+  position: absolute;
+  inset-block-start: 9px;
+  inset-inline-end: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--surface);
+}
+
+.chip--compact {
+  min-height: 38px;
+  padding: var(--space-1) var(--space-4);
+}
+
+/* ------------------------------- account ------------------------------ */
+
+.account {
+  position: relative;
+}
+
+.account__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.account__trigger:hover {
+  background: var(--surface-2);
+}
+
+.account__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  /* Both stops must pass against --brand-ink, so the gradient runs
+     brand-hover → brand. --brand-bright would put the initial at 2.6:1. */
+  background-color: var(--brand);
+  background-image: linear-gradient(145deg, var(--brand-hover), transparent 70%);
+  color: var(--brand-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  flex: none;
+}
+
+.account__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account__menu {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + var(--space-2));
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.account__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  margin-block-end: var(--space-1);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.account__head-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.account__head-meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.account__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+}
+
+.account__item:hover {
+  background: var(--surface-2);
+}
+
+.account__item--danger {
+  color: var(--danger);
+}
+
+/* -------------------------------- main -------------------------------- */
+
+.app__main {
+  flex: 1;
+  padding: clamp(var(--space-5), 4vw, var(--space-6)) clamp(var(--space-4), 4vw, var(--space-6))
+    var(--space-7);
+}
+
+.app__main:focus {
+  outline: none;
+}
+
+.app__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ------------------------------ bottom nav ----------------------------- */
+
+/* Mobile primary navigation. Hidden on desktop, where .topnav takes over. */
+.bottomnav {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .topnav {
+    display: none;
+  }
+
+  .topbar__brand {
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+  }
+
+  .topbar__wordmark {
+    font-size: var(--fs-base);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar__actions {
+    flex: none;
+  }
+
+  .app__main {
+    /* Clear the fixed bottom bar plus the home indicator. */
+    padding-bottom: calc(var(--space-8) + 26px + env(safe-area-inset-bottom));
+  }
+
+  .bottomnav {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 30;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-2);
+    padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+    background-color: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-block-start: 1px solid var(--rule-soft);
+    box-shadow: 0 -6px 24px -14px rgba(8, 48, 32, 0.28);
+  }
+
+  .bottomnav__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: var(--space-1);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .bottomnav__link.is-active {
+    color: var(--brand);
+    background: var(--brand-wash);
+  }
+}
+
+@media (max-width: 400px) {
+  .topbar__pos {
+    display: none;
+  }
+
+  .account__trigger {
+    padding: var(--space-1);
+  }
+}

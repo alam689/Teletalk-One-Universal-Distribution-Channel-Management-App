@@ -1,0 +1,141 @@
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 420px;
+}
+
+.login__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.login__eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.login__title {
+  font-size: var(--fs-xl);
+}
+
+/* Reserves no space when empty, so the form does not jump on first error. */
+.login__live:empty {
+  display: none;
+}
+
+.login__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+}
+
+.login__context-label {
+  color: var(--muted);
+}
+
+.login__otp .field__input {
+  font-size: var(--fs-lg);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+}
+
+.login__resend {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  margin-block-start: calc(var(--space-3) * -1);
+}
+
+.login__resend-wait {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.login__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.login__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--rule);
+}
+
+.login__foot-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.login__foot-body {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.login__demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  padding: var(--space-4);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Dev-only role picker. One account per role, so every capability set in the
+   org model can be signed into and reviewed. */
+.login__accounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-1);
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.login__account {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  text-align: start;
+}
+
+.login__account:hover {
+  border-color: var(--brand-bright);
+  background: var(--surface-2);
+}
+
+.login__account.is-active {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--brand);
+  font-weight: 600;
+}

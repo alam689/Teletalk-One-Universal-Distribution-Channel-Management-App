@@ -1,0 +1,234 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+/* ------------------------------- stats ------------------------------- */
+
+.home__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-3);
+}
+
+.stat {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
+
+/* The number the retailer checks first: a soft mint wash rather than a hard
+   accent bar — same emphasis, quieter. */
+.stat--primary {
+  background-image: radial-gradient(
+    420px 200px at 100% 0%,
+    var(--brand-wash) 0%,
+    transparent 70%
+  );
+}
+
+.stat--primary::after {
+  content: '';
+  position: absolute;
+  inset-block: var(--space-5);
+  inset-inline-start: 0;
+  width: 3px;
+  border-start-end-radius: var(--radius-pill);
+  border-end-end-radius: var(--radius-pill);
+  background: var(--brand-bright);
+}
+
+.stat__label {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.stat__value {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+}
+
+.stat__unit {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--muted);
+  margin-inline-start: 4px;
+}
+
+/* ------------------------------ sections ----------------------------- */
+
+.home__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.home__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.home__heading {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.home__search {
+  min-width: 240px;
+  max-width: 320px;
+  flex: 1;
+}
+
+.home__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* A hairline that trails off, rather than a full rule cutting the page. */
+.home__group-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--rule), transparent);
+}
+
+.home__empty {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-lg);
+}
+
+/* -------------------------------- tiles ------------------------------ */
+
+.tiles,
+.quick {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tiles {
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+}
+
+.quick {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  /* Not a fixed height — Bangla labels wrap to two lines. */
+  min-height: 116px;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.tile:hover:not(:disabled) {
+  border-color: var(--brand-bright);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* Circular wells, as in the MyTeletalk concept screens. Colour comes from the
+   tile's category so the grid is scannable by hue before it is read. */
+.tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--well, var(--brand-wash));
+  color: var(--well-ink, var(--brand));
+  flex: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.tile:hover:not(:disabled) .tile__icon {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px -8px currentColor;
+}
+
+.tile[data-cat='sim'] { --well: var(--cat-sim-well); --well-ink: var(--cat-sim-ink); }
+.tile[data-cat='mnp'] { --well: var(--cat-mnp-well); --well-ink: var(--cat-mnp-ink); }
+.tile[data-cat='recharge'] { --well: var(--cat-recharge-well); --well-ink: var(--cat-recharge-ink); }
+.tile[data-cat='stock'] { --well: var(--cat-stock-well); --well-ink: var(--cat-stock-ink); }
+.tile[data-cat='distribution'] { --well: var(--cat-distribution-well); --well-ink: var(--cat-distribution-ink); }
+.tile[data-cat='finance'] { --well: var(--cat-finance-well); --well-ink: var(--cat-finance-ink); }
+.tile[data-cat='report'] { --well: var(--cat-report-well); --well-ink: var(--cat-report-ink); }
+.tile[data-cat='campaign'] { --well: var(--cat-campaign-well); --well-ink: var(--cat-campaign-ink); }
+.tile[data-cat='service'] { --well: var(--cat-service-well); --well-ink: var(--cat-service-ink); }
+.tile[data-cat='channel'] { --well: var(--cat-channel-well); --well-ink: var(--cat-channel-ink); }
+
+.tile__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tile--big {
+  min-height: 128px;
+  border-radius: var(--radius-xl);
+}
+
+/* Quick actions invert: solid category ink with a light glyph, so the four
+   things done most often carry more weight than the catalogue below. */
+.tile--big .tile__icon {
+  width: 52px;
+  height: 52px;
+  background: var(--well-ink, var(--brand));
+  color: var(--well, var(--brand-wash));
+  box-shadow: 0 10px 22px -10px var(--well-ink, var(--brand));
+}
+
+.tile--big .tile__label {
+  font-size: var(--fs-base);
+}
+
+@media (max-width: 560px) {
+  .tiles {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  }
+
+  .tile {
+    min-height: 96px;
+    padding: var(--space-3);
+  }
+}

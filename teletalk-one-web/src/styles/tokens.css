@@ -1,0 +1,247 @@
+/* ---------------------------------------------------------------
+   Teletalk One — design tokens
+
+   Soft/premium direction taken from the MyTeletalk concept screens:
+   mint-tinted grounds, white cards floating on diffuse shadows rather
+   than hairline borders, generous radii, circular pale-mint icon wells.
+
+   Contrast discipline is what keeps a soft palette from going illegible:
+     --brand-bright   vivid Teletalk green. 3.0:1 on white → NON-TEXT ONLY
+                      (icon fills, rules, gradient stops, focus glow)
+     --brand          deepened emerald, 5.4:1 on white → anything text-bearing
+     --brand-panel    panel ground; stays dark in BOTH themes because it
+                      always carries white text, while --brand flips light
+   Components must never read a raw hex value.
+   --------------------------------------------------------------- */
+
+:root {
+  /* grounds & ink */
+  --paper: #f1f8f4;
+  --paper-glow: radial-gradient(900px 520px at 10% -8%, rgba(0, 184, 77, 0.11), transparent 62%),
+    radial-gradient(760px 420px at 96% 2%, rgba(0, 150, 136, 0.07), transparent 58%);
+  --surface: #ffffff;
+  --surface-2: #eef6f1;
+  --surface-3: #e6f2eb;
+  --ink: #0f1f18;
+  --ink-soft: #3b534a;
+  --muted: #5f7269;
+  --rule: #e2eee8;
+  --rule-soft: #edf5f1;
+
+  /* brand */
+  --brand: #0b7a4f;
+  --brand-bright: #00b84d;
+  --brand-deep: #05442d;
+  --brand-hover: #096540;
+  --brand-ink: #ffffff;
+  --brand-wash: #e4f4ea;
+  --brand-panel: #0b7a4f;
+  --on-brand: #ffffff;
+  --on-brand-soft: rgba(255, 255, 255, 0.93);
+
+  /* Teletalk campaign gold — a rule or a bullet on green, never text */
+  --accent-yellow: #ffd34d;
+
+  /* Category palette. 62 identical green wells are unscannable — a retailer
+     hunting for "commission" should be able to aim at a colour first and read
+     second. Wells are low-chroma tints; inks are the same hue darkened past
+     4.5:1 on their own well, so the pairing survives both themes. */
+  --cat-sim-well: #e2f3e9;
+  --cat-sim-ink: #0b6b46;
+  --cat-mnp-well: #e2edfa;
+  --cat-mnp-ink: #1a5487;
+  --cat-recharge-well: #fbeeda;
+  --cat-recharge-ink: #855100;
+  --cat-stock-well: #ece8f8;
+  --cat-stock-ink: #4f3f97;
+  --cat-distribution-well: #ddf0f0;
+  --cat-distribution-ink: #0d6363;
+  --cat-finance-well: #f4efd8;
+  --cat-finance-ink: #6f5a00;
+  --cat-report-well: #e6e8f7;
+  --cat-report-ink: #3a3f96;
+  --cat-campaign-well: #fae4ec;
+  --cat-campaign-ink: #932650;
+  --cat-service-well: #ddf0f7;
+  --cat-service-ink: #0b5d77;
+  --cat-channel-well: #e6edef;
+  --cat-channel-ink: #3a545f;
+
+  /* semantic */
+  --danger: #9b3521;
+  --danger-wash: #fbe6e0;
+  --warn: #8f5600;
+  --warn-wash: #fbeed6;
+  --ok: #0b7a4f;
+  --ok-wash: #e0f2e7;
+
+  --focus: #0b7a4f;
+  --focus-glow: rgba(0, 184, 77, 0.22);
+
+  /* type */
+  --font-ui: 'Noto Sans Bengali', 'Hind Siliguri', 'Nirmala UI', 'Segoe UI',
+    system-ui, -apple-system, sans-serif;
+  --font-id: 'Roboto Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
+
+  --fs-xs: 0.78rem;
+  --fs-sm: 0.88rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.16rem;
+  --fs-xl: 1.45rem;
+  --fs-2xl: 1.95rem;
+
+  /* Bangla needs more leading — matras sit above and below the baseline. */
+  --lh-body: 1.7;
+  --lh-tight: 1.35;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Green-tinted shadows: a neutral grey shadow reads dirty over mint. */
+  --shadow-sm: 0 1px 2px rgba(8, 48, 32, 0.04), 0 3px 10px -4px rgba(8, 48, 32, 0.07);
+  --shadow: 0 2px 4px rgba(8, 48, 32, 0.04), 0 14px 32px -16px rgba(8, 48, 32, 0.18);
+  --shadow-lg: 0 4px 8px rgba(8, 48, 32, 0.05), 0 28px 56px -28px rgba(8, 48, 32, 0.3);
+
+  --tap-min: 44px;
+}
+
+html[lang='en'] {
+  --lh-body: 1.55;
+  --lh-tight: 1.25;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #071310;
+    --paper-glow: radial-gradient(900px 520px at 10% -8%, rgba(0, 184, 77, 0.1), transparent 62%),
+      radial-gradient(760px 420px at 96% 2%, rgba(0, 150, 136, 0.07), transparent 58%);
+    --surface: #0e1d17;
+    --surface-2: #142720;
+    --surface-3: #1a3128;
+    --ink: #e6efe9;
+    --ink-soft: #c3d2cb;
+    --muted: #8ba299;
+    --rule: #21362d;
+    --rule-soft: #182a22;
+
+    --brand: #3fd183;
+    --brand-bright: #4fe096;
+    --brand-deep: #04241a;
+    --brand-hover: #56dd94;
+    --brand-ink: #04241a;
+    --brand-wash: #133527;
+    --brand-panel: #075437;
+    --on-brand: #ffffff;
+    --on-brand-soft: rgba(255, 255, 255, 0.93);
+
+    --accent-yellow: #ffd34d;
+
+    --cat-sim-well: #12332a;
+    --cat-sim-ink: #4ecf94;
+    --cat-mnp-well: #12283c;
+    --cat-mnp-ink: #6fb4ec;
+    --cat-recharge-well: #33260f;
+    --cat-recharge-ink: #e2ab5c;
+    --cat-stock-well: #241f3d;
+    --cat-stock-ink: #a99aec;
+    --cat-distribution-well: #0f2e2e;
+    --cat-distribution-ink: #5cc9c9;
+    --cat-finance-well: #2e2811;
+    --cat-finance-ink: #d6bd52;
+    --cat-report-well: #1e2040;
+    --cat-report-ink: #9aa2ee;
+    --cat-campaign-well: #351623;
+    --cat-campaign-ink: #ec8fb0;
+    --cat-service-well: #0f2b36;
+    --cat-service-ink: #63bcd9;
+    --cat-channel-well: #1e2a2f;
+    --cat-channel-ink: #a3bcc7;
+
+    --danger: #f0907a;
+    --danger-wash: #35190f;
+    --warn: #e0aa5e;
+    --warn-wash: #33260f;
+    --ok: #3fd183;
+    --ok-wash: #10301f;
+
+    --focus: #4fe096;
+    --focus-glow: rgba(79, 224, 150, 0.24);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 36px -18px rgba(0, 0, 0, 0.85);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 32px 64px -30px rgba(0, 0, 0, 0.95);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #071310;
+  --paper-glow: radial-gradient(900px 520px at 10% -8%, rgba(0, 184, 77, 0.1), transparent 62%),
+    radial-gradient(760px 420px at 96% 2%, rgba(0, 150, 136, 0.07), transparent 58%);
+  --surface: #0e1d17;
+  --surface-2: #142720;
+  --surface-3: #1a3128;
+  --ink: #e6efe9;
+  --ink-soft: #c3d2cb;
+  --muted: #8ba299;
+  --rule: #21362d;
+  --rule-soft: #182a22;
+
+  --brand: #3fd183;
+  --brand-bright: #4fe096;
+  --brand-deep: #04241a;
+  --brand-hover: #56dd94;
+  --brand-ink: #04241a;
+  --brand-wash: #133527;
+  --brand-panel: #075437;
+  --on-brand: #ffffff;
+  --on-brand-soft: rgba(255, 255, 255, 0.93);
+
+  --accent-yellow: #ffd34d;
+
+  --cat-sim-well: #12332a;
+  --cat-sim-ink: #4ecf94;
+  --cat-mnp-well: #12283c;
+  --cat-mnp-ink: #6fb4ec;
+  --cat-recharge-well: #33260f;
+  --cat-recharge-ink: #e2ab5c;
+  --cat-stock-well: #241f3d;
+  --cat-stock-ink: #a99aec;
+  --cat-distribution-well: #0f2e2e;
+  --cat-distribution-ink: #5cc9c9;
+  --cat-finance-well: #2e2811;
+  --cat-finance-ink: #d6bd52;
+  --cat-report-well: #1e2040;
+  --cat-report-ink: #9aa2ee;
+  --cat-campaign-well: #351623;
+  --cat-campaign-ink: #ec8fb0;
+  --cat-service-well: #0f2b36;
+  --cat-service-ink: #63bcd9;
+  --cat-channel-well: #1e2a2f;
+  --cat-channel-ink: #a3bcc7;
+
+  --danger: #f0907a;
+  --danger-wash: #35190f;
+  --warn: #e0aa5e;
+  --warn-wash: #33260f;
+  --ok: #3fd183;
+  --ok-wash: #10301f;
+
+  --focus: #4fe096;
+  --focus-glow: rgba(79, 224, 150, 0.24);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 36px -18px rgba(0, 0, 0, 0.85);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 32px 64px -30px rgba(0, 0, 0, 0.95);
+}
