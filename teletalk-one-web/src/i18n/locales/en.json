@@ -2,6 +2,7 @@
   "app": {
     "name": "Teletalk One",
     "portal": "Management Portal",
+    "tagline": "আমাদের ফোন",
     "owner": "Teletalk Bangladesh Limited",
     "dept": "Sales, Distribution & CRM",
     "loading": "Loading…",
@@ -10,7 +11,6 @@
   },
   "brand": {
     "pitchTitle": "The whole distribution channel, in one app",
-    "pitchBody": "Today BVS handles only SIM activation and replacement, and the first recharge means a separate login to Telepay.",
     "capsTitle": "Capabilities this platform brings in",
     "caps": {
       "mnp": "MNP handling",

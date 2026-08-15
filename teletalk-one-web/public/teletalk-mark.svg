@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Teletalk">
+  <title>Teletalk</title>
+
+  <!--
+    Teletalk mark only, no plate. Fill is `currentColor`, so it inherits from
+    whatever it is placed in — white on the green panel, green on white.
+
+    TRACED, NOT OFFICIAL. See teletalk-icon.svg.
+  -->
+
+  <g fill="currentColor">
+    <g transform="translate(13.6 4.4) scale(0.345 0.2935)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+    <g transform="translate(29.1 19) scale(0.549 0.5484)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+    <g transform="translate(23.6 49.8) scale(0.636 0.7339)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+  </g>
+</svg>

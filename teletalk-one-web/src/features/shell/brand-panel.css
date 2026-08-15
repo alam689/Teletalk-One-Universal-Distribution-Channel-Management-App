@@ -15,32 +15,41 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-7);
+  /* NOT space-between: with only two children on a tall panel it opened a
+     ~150px hole between the pitch and the capability list. The body block
+     below absorbs the free space with auto margins instead. */
+  justify-content: flex-start;
+  gap: var(--space-6);
   padding: var(--space-7) clamp(var(--space-5), 4vw, var(--space-7));
-  /* Colour first, gradient on top: the shorthand alone leaves background-color
+  /* Colour first, gradients on top: the shorthand alone leaves background-color
      transparent, so a non-painting gradient would drop white text onto the
-     near-white page ground. --brand-panel is the gradient's lightest stop, so
-     the fallback is also the worst case every contrast check is measured on. */
+     near-white page ground. --brand-panel is the lightest stop anywhere in the
+     stack, so the fallback is also the worst case every contrast check is
+     measured on — every overlay below only darkens.
+
+     Lighting copies the brand plate: a soft lift off-centre, deep corners. */
   background-color: var(--brand-panel);
-  background-image: linear-gradient(152deg, var(--brand-deep) 0%, transparent 82%);
+  background-image:
+    radial-gradient(120% 90% at 62% 38%, rgba(255, 255, 255, 0.1) 0%, transparent 58%),
+    radial-gradient(100% 100% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.28) 100%),
+    linear-gradient(152deg, var(--brand-deep) 0%, transparent 78%);
   color: var(--on-brand);
   border-start-end-radius: var(--radius-xl);
   border-end-end-radius: var(--radius-xl);
 }
 
-/* A soft brand glow in the upper field — depth without a hard shape, and it
-   sits above the panel's darkest area so no text loses contrast over it. */
+/* A soft brand glow in the upper field — depth without a hard shape. Kept
+   modest and off the text column so nothing loses contrast beneath it. */
 .shell__brand::before {
   content: '';
   position: absolute;
-  inset-block-start: -18%;
-  inset-inline-end: -14%;
-  width: 62%;
+  inset-block-start: -20%;
+  inset-inline-end: -16%;
+  width: 58%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, var(--brand-bright) 0%, transparent 66%);
-  opacity: 0.28;
+  opacity: 0.2;
   pointer-events: none;
 }
 
@@ -67,9 +76,18 @@
   z-index: 1;
 }
 
+/* Letterhead. Deliberately quiet — it identifies the owner, it is not the
+   headline. Stays pinned at the top like the header of an official letter. */
+.shell__brand-top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .shell__owner {
   font-size: var(--fs-sm);
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .shell__dept {
@@ -77,50 +95,122 @@
   color: var(--on-brand-soft);
 }
 
-.shell__brand-mid {
+/* Everything below the letterhead, as one block centred in the space the
+   letterhead leaves. Auto margins on both sides split the slack evenly — and,
+   unlike a fixed gap, they collapse to zero on a short viewport instead of
+   pushing content past `overflow: hidden`. A shared max-width gives the three
+   parts a common optical right edge. */
+.shell__brand-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-block: auto;
+  max-width: 60ch;
+}
+
+/* --- brand furniture (decorative, never under text) ------------------- */
+
+.shell__spark {
+  position: absolute;
+  inset-block-start: -56px;
+  inset-inline-start: -70px;
+  line-height: 0;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* Debossed, not embossed. The text column is 60ch wide and the panel is
+   narrower than that at most widths, so a watermark WILL sit under text — a
+   white one at 7% lightens the ground and takes --on-brand-soft to 4.31:1,
+   under AA. Darkening instead lifts it to 5.48:1, better than the bare panel. */
+.shell__watermark {
+  position: absolute;
+  inset-block-end: -90px;
+  inset-inline-end: -70px;
+  line-height: 0;
+  color: #00160c;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+/* --- wordmark lockup -------------------------------------------------- */
+
+.shell__mark {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  max-width: 34ch;
+}
+
+/* Wordmark left, swoosh right — the arrangement on the brand plate. */
+.shell__lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.shell__lockup-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shell__lockup-mark {
+  color: #ffffff;
+  line-height: 0;
+  flex: none;
 }
 
 .shell__wordmark {
   font-size: var(--fs-2xl);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
 }
 
-/* Campaign yellow, used as Teletalk uses it: a rule on green, never text. */
-.shell__wordmark::after {
-  content: '';
-  display: block;
-  width: 52px;
-  height: 4px;
-  margin-block-start: var(--space-2);
-  border-radius: 2px;
-  background: var(--accent-yellow);
+.shell__tagline {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--on-brand-soft);
+  letter-spacing: 0.02em;
 }
 
+/* Campaign gold, used as Teletalk uses it: a rule on green, never text. */
 .shell__portal {
   font-size: var(--fs-sm);
+  font-weight: 500;
   color: var(--on-brand-soft);
-  margin-block-start: calc(var(--space-2) * -1);
+  padding-block-start: var(--space-3);
+  border-block-start: 3px solid var(--accent-yellow);
+  border-image: linear-gradient(90deg, var(--accent-yellow) 0 48px, transparent 48px) 1;
+  width: fit-content;
+}
+
+/* --- pitch ---------------------------------------------------------- */
+
+.shell__pitch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  /* Narrower than the capability list on purpose: prose wants ~34ch, a
+     two-column list does not. */
+  max-width: 36ch;
 }
 
 .shell__pitch-title {
   font-size: var(--fs-lg);
   font-weight: 600;
-  margin-block-start: var(--space-4);
+  line-height: 1.35;
 }
 
-.shell__pitch-body {
-  font-size: var(--fs-sm);
-  color: var(--on-brand-soft);
-}
+/* --- capabilities ---------------------------------------------------- */
 
+/* A rule, not a gap, separates the claim from its evidence — it holds the two
+   apart at any panel height, where a margin only works at one. */
 .shell__caps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  padding-block-start: var(--space-5);
+  border-block-start: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* Hierarchy from size, weight and letter-spacing — not from dimming, which
@@ -133,12 +223,18 @@
   color: var(--on-brand-soft);
 }
 
-/* Ten items from the letter. Two columns keeps the panel from running long,
-   and auto-flow row keeps the letter's order readable top-to-bottom. */
+/* Ten items, in the letter's order.
+   `grid-auto-flow: column` with five fixed rows puts items 1–5 down the left
+   and 6–10 down the right. The default row flow laid them out 1,3,5,7,9 /
+   2,4,6,8,10 — which silently scrambles the order the letter states them in,
+   because nobody reads a two-column list across. */
 .shell__points {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-5);
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: var(--space-6);
+  row-gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -163,8 +259,11 @@
   background: var(--accent-yellow);
 }
 
+/* One column below 1180px — reverting to row flow keeps 1–10 sequential. */
 @media (max-width: 1180px) {
   .shell__points {
+    grid-template-rows: none;
+    grid-auto-flow: row;
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -211,9 +310,14 @@
   /* On a phone the sign-in form is the job; the capability list is context.
      Hidden rather than pushing the form below ten bullets. */
   .shell__caps,
-  .shell__pitch-title,
-  .shell__pitch-body {
+  .shell__pitch {
     display: none;
+  }
+
+  /* Only the wordmark survives here, so there is no slack to collect. */
+  .shell__brand-body {
+    margin-block: 0;
+    gap: 0;
   }
 
   .shell__panel {

@@ -10,5 +10,13 @@
   "theme_color": "#0b7a4f",
   "lang": "bn",
   "dir": "ltr",
-  "categories": ["business", "productivity"]
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/teletalk-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
