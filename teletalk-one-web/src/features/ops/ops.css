@@ -1,0 +1,31 @@
+/* Outlet operations. Most of the layout comes from the shared read kit and
+   the lifting stylesheet; this file holds only what is specific here. */
+
+.ops-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* A count entered beside the system figure, so a variance reads at a glance.
+   The system figure is deliberately not shown until a count exists — see the
+   note in StockReconcilePage. */
+.count-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.count-row__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.count-row__figures {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}

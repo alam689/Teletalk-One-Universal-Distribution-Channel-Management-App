@@ -1,0 +1,394 @@
+/* The Phase-1 read screens: ledger, stock, commission, sales, lookup,
+   notifications, support. */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.screen__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.screen__title {
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-tight);
+}
+
+.screen__lede {
+  max-width: 60ch;
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+  line-height: var(--lh-body);
+}
+
+.datalist {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+/* -------------------------------- ledger ------------------------------- */
+
+.ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Flex rather than grid: a row has between four and six children depending on
+   whether it carries an amount and a note, and auto-placement in a fixed grid
+   put the note on top of the timestamp at 320px. */
+.ledger__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+}
+
+.ledger__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+.ledger__body {
+  flex: 1 1 14ch;
+  min-width: 0;
+}
+
+.ledger__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.ledger__id {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.ledger__right {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.ledger__amount {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.ledger__meta,
+.ledger__note {
+  flex-basis: 100%;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: var(--lh-body);
+  /* Line up under the title, past the icon, rather than under the icon. */
+  padding-inline-start: calc(40px + var(--space-3));
+}
+
+.ledger__note {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .ledger__meta,
+  .ledger__note {
+    padding-inline-start: 0;
+  }
+}
+
+/* -------------------------------- stock -------------------------------- */
+
+.batch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.batch:last-child {
+  border-block-end: none;
+}
+
+.batch__name {
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.batch__range {
+  flex-basis: 100%;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.batch__count {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.batch__unit {
+  margin-inline-start: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* -------------------------------- target ------------------------------- */
+
+.target {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.target:last-child {
+  border-block-end: none;
+}
+
+.target__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+/* The figures are the accessible reading of the bar below, not a caption. */
+.target__figures {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.target__track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.target__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand-bright);
+}
+
+.target__fill--met {
+  background: var(--ok);
+}
+
+/* ------------------------------- campaign ------------------------------ */
+
+.campaign__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.campaign__dates {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* --------------------------------- bars -------------------------------- */
+
+/* A bar chart, not a plotting library. Nine bars on a counter phone do not
+   justify 40 kB of chart code in a bundle a retailer downloads over 2G. */
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  height: 140px;
+  padding-block-start: var(--space-4);
+}
+
+.bars__col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  min-width: 0;
+}
+
+.bars__bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--brand-bright);
+}
+
+.bars__label {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------- customer ------------------------------ */
+
+.searchbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.searchbar .field {
+  flex: 1 1 22ch;
+}
+
+.customer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+}
+
+.customer__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.customer__name {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+/* ----------------------------- notifications --------------------------- */
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.note {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+}
+
+/* Unread is carried by a border and a dot, never by colour alone. */
+.note--unread {
+  border-inline-start: 3px solid var(--brand-bright);
+  background: var(--brand-wash);
+}
+
+.note__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+.note--action .note__icon {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.note__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.note__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.note__text {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+  line-height: var(--lh-body);
+}
+
+.note__meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* -------------------------------- support ------------------------------ */
+
+.support {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.support__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.support__row:hover {
+  background: var(--surface-3);
+}
+
+.support__label {
+  flex: 1 1 10ch;
+  min-width: 0;
+  font-size: var(--fs-sm);
+}
+
+/* An email address is one unbreakable token; without this it pushes a 320px
+   screen 6px wide rather than wrapping. */
+.support__value {
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}

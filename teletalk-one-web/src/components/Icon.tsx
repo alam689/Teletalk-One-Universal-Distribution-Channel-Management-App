@@ -75,6 +75,17 @@ const G = {
   home: { fill: 'M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z', line: 'M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z' },
   grid: { fill: 'M4 4h6.5v6.5H4z M13.5 4H20v6.5h-6.5z M4 13.5h6.5V20H4z M13.5 13.5H20V20h-6.5z', line: 'M4 4h6.5v6.5H4z M13.5 4H20v6.5h-6.5z M4 13.5h6.5V20H4z M13.5 13.5H20V20h-6.5z' },
   contrast: { fill: 'M12 3v18a9 9 0 0 0 0-18z', line: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 3v18' },
+  /* Theme toggle. Each one shows the theme you will GET, not the one you are
+     in — a moon on a light screen means "go dark", which is the convention
+     every OS uses. */
+  moon: {
+    fill: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z',
+    line: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z',
+  },
+  sun: {
+    fill: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+    line: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v2 M12 20v2 M2 12h2 M20 12h2 M4.9 4.9l1.4 1.4 M17.7 17.7l1.4 1.4 M19.1 4.9l-1.4 1.4 M6.3 17.7l-1.4 1.4',
+  },
   globe: { fill: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', line: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M3 12h18 M12 3c2.5 2.6 2.5 15.4 0 18 M12 3c-2.5 2.6-2.5 15.4 0 18' },
   lock: { fill: 'M6 11h12v9H6z', line: 'M6 11h12v9H6z M9 11V8.2a3 3 0 0 1 6 0V11 M12 14.6v2.2' },
   chevron: { line: 'M9.5 6l6 6-6 6' },

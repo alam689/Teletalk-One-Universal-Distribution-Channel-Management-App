@@ -1,0 +1,103 @@
+/* Channel management. Most layout comes from the shared read kit; this file
+   holds the two things that are genuinely new — a location control and a
+   hierarchy. */
+
+.geo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+}
+
+/* Coordinates are identifiers: read aloud, pasted into other systems, and
+   never localised. Tabular figures so a column of them lines up. */
+.geo__coords {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------- tree --------------------------------- */
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tree__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius);
+}
+
+.tree__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+.tree__body {
+  display: flex;
+  flex: 1 1 14ch;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tree__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.tree__meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.tree__owner {
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* Indentation is applied inline per depth; below the navigation breakpoint it
+   would eat the whole row, so it is dropped and the icon carries the level. */
+@media (max-width: 480px) {
+  .tree__item {
+    padding-inline-start: 0 !important;
+  }
+}
+
+/* -------------------------------- file input ---------------------------- */
+
+/* A file input cannot be restyled far without losing its own affordance, so
+   it keeps the field frame and nothing else. */
+input[type='file'].field__input {
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}

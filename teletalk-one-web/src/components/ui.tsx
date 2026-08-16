@@ -3,6 +3,7 @@ import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
+  type SelectHTMLAttributes,
 } from 'react'
 import './ui.css'
 
@@ -95,6 +96,77 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
     </div>
   )
 })
+
+/* -------------------------------- Select ------------------------------- */
+
+interface SelectOption {
+  value: string
+  label: string
+}
+
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
+  id: string
+  label: string
+  help?: string
+  error?: string
+  /** Rendered first, disabled, so the control has no accidental default. */
+  placeholder?: string
+  options: SelectOption[]
+}
+
+/**
+ * A native select, deliberately. A custom listbox on a 4-inch counter phone
+ * loses to the OS picker on every measure that matters — thumb reach, Bangla
+ * font, and the fact that it keeps working when our CSS does not.
+ */
+export function Select({
+  id,
+  label,
+  help,
+  error,
+  placeholder,
+  options,
+  className = '',
+  ...rest
+}: SelectProps) {
+  const helpId = `${id}-help`
+  const errorId = `${id}-error`
+  const describedBy = [help ? helpId : null, error ? errorId : null].filter(Boolean).join(' ')
+
+  return (
+    <div className={`field ${error ? 'field--invalid' : ''} ${className}`}>
+      <label className="field__label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="field__control">
+        <select
+          id={id}
+          className="field__select"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy || undefined}
+          {...rest}
+        >
+          {placeholder !== undefined && <option value="">{placeholder}</option>}
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      {help && !error && (
+        <p className="field__help" id={helpId}>
+          {help}
+        </p>
+      )}
+      {error && (
+        <p className="field__error" id={errorId} role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
 
 /* -------------------------------- Alert -------------------------------- */
 

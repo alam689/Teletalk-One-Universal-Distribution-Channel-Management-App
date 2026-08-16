@@ -1,4 +1,5 @@
 import { env } from '../env'
+import type { ApiRoute } from './apiRoutes'
 
 /**
  * Every failure the UI can encounter, as a stable code. The server sends codes,
@@ -153,6 +154,22 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   throw lastError instanceof ApiError ? lastError : new ApiError('generic')
+}
+
+/**
+ * The way callers should reach the API: path and method come from the
+ * generated contract table, so no screen can invent an endpoint.
+ */
+export function call<T>(
+  route: ApiRoute,
+  options: Omit<RequestOptions, 'method'> & { query?: Record<string, string> } = {},
+): Promise<T> {
+  const { query, ...rest } = options
+  // Only non-sensitive selectors belong here — a period, a page. Anything that
+  // identifies a person goes in a body, because a query string is written to
+  // every proxy and access log on the way.
+  const search = query ? `?${new URLSearchParams(query).toString()}` : ''
+  return request<T>(`${route.path}${search}`, { ...rest, method: route.method })
 }
 
 /** Maps any thrown value onto an `error.*` i18n key. */

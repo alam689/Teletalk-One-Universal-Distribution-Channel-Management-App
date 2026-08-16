@@ -1,0 +1,508 @@
+/* The read-screen kit. Shared by every list, ledger and summary screen. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
+
+.panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.panel__title {
+  font-size: var(--fs-lg);
+}
+
+@media (max-width: 720px) {
+  .panel {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* ------------------------------- empty -------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+}
+
+.empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.empty__title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.empty__body {
+  max-width: 40ch;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  line-height: var(--lh-body);
+}
+
+/* ------------------------------ skeleton ------------------------------ */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeleton__row {
+  height: 52px;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease infinite;
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* A sweeping gradient behind text is exactly what vestibular-sensitivity
+   settings exist to stop. Hold the mid tone instead of animating it. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__row {
+    animation: none;
+    background: var(--surface-2);
+  }
+}
+
+/* -------------------------------- pill -------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--ok {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+.pill--warn {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.pill--danger {
+  background: var(--danger-wash);
+  color: var(--danger);
+}
+.pill--muted {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* ---------------------------- resource error --------------------------- */
+
+.resource-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--danger-wash);
+  border-inline-start: 3px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.resource-error__text {
+  font-size: var(--fs-sm);
+  color: var(--danger);
+  line-height: var(--lh-body);
+}
+
+/* ------------------------------- filters ------------------------------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filters__chip {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-control);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.filters__chip:hover {
+  border-color: var(--brand-bright);
+}
+
+.filters__chip[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+
+/* ------------------------------- metrics ------------------------------- */
+
+/* auto-fit alone stretches two metrics into two 550px slabs on a desktop.
+   Four fixed tracks keep a stat tile the size of a stat tile whether there are
+   two of them or four. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15ch), 1fr));
+  gap: var(--space-3);
+}
+
+@media (min-width: 900px) {
+  .metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.metric--strong {
+  background: var(--brand-wash);
+  border-color: var(--brand-bright);
+}
+
+.metric__label {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.metric__value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+
+.metric--strong .metric__value {
+  color: var(--brand);
+}
+
+.metric__hint {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* ------------------------------- datarow ------------------------------- */
+
+.datarow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.datarow:last-child {
+  border-block-end: none;
+}
+
+.datarow dt {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.datarow dd {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: end;
+}
+
+/* ======================================================================
+   Shared form and list primitives.
+
+   These began life in the lifting feature and are now used by ops and
+   channel as well — twenty-odd screens between them. They live here,
+   in the stylesheet every screen already pulls in through `data.tsx`,
+   because a route that never loaded the lifting chunk was rendering an
+   unstyled form at full container width.
+   ====================================================================== */
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queue__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.queue__row:hover {
+  border-color: var(--brand-bright);
+  background: var(--surface-2);
+}
+
+.queue__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.queue__id {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.queue__dealer {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.queue__meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.queue__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.queue__value {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+/* ------------------------------ timeline ------------------------------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-inline-start: var(--space-5);
+}
+
+.timeline__item {
+  position: relative;
+}
+
+/* The rail. Drawn on the item so it stops at the last entry rather than
+   trailing into empty space. */
+.timeline__item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(var(--space-5) * -1 + 4px);
+  top: 14px;
+  bottom: calc(var(--space-4) * -1);
+  width: 1px;
+  background: var(--rule);
+}
+
+.timeline__item:last-child::before {
+  display: none;
+}
+
+.timeline__dot {
+  position: absolute;
+  inset-inline-start: calc(var(--space-5) * -1);
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.timeline__action {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.timeline__actor,
+.timeline__at {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.timeline__note {
+  margin-block-start: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+  line-height: var(--lh-body);
+}
+
+/* ------------------------------- action -------------------------------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--rule);
+}
+
+.form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+@media (max-width: 720px) {
+  .form__actions > .btn--primary {
+    width: 100%;
+  }
+}
+
+/* ------------------------- desktop form layout ------------------------- */
+
+/**
+ * `.form` is the form body on roughly twenty screens — deposit slip,
+ * collection, POSM, geo-fence, retailer onboarding, requisition, complaints.
+ * Stacked in a single column it leaves two thirds of a desktop window empty
+ * and turns a six-field form into a scroll.
+ *
+ * From 900px it becomes two columns. Anything that is not a field spans the
+ * full width, because a legend, an alert or a row of buttons that occupies
+ * half a form reads as belonging to the field beside it.
+ */
+@media (min-width: 900px) {
+  .form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-5);
+    align-items: start;
+  }
+
+  .form > .wiz__legend,
+  .form > .wiz__note,
+  .form > .wiz__grid,
+  .form > .alert,
+  .form > .form__actions,
+  .form > .datalist,
+  .form > .ledger,
+  .form > .checkbox,
+  .form > .geo,
+  .form > .batch__range,
+  .form > p {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ------------------------ desktop list + detail ------------------------ */
+
+/**
+ * A queue and the thing you picked out of it, side by side.
+ *
+ * On a phone the detail replaces the list, because there is no room for both.
+ * On a desktop replacing it throws away the context that made the queue worth
+ * having — a field officer wants to see what else is waiting while they read
+ * the one in front of them.
+ */
+.split {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/**
+ * The second column only exists once something is open. Applying the split
+ * unconditionally squeezed the queue into 456px of a 1120px shell and left
+ * 640px of nothing beside it — which is exactly what it looked like.
+ */
+@media (min-width: 1100px) {
+  .split--detail {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
+  /* The list stays put while a long request detail scrolls beside it. */
+  .split--detail .split__list {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+/* Below the split breakpoint the detail takes over, exactly as before. */
+@media (max-width: 1099px) {
+  .split--detail .split__list {
+    display: none;
+  }
+}
+
+/* The row you are reading, marked in the list beside it. Border and background
+   together, never colour alone. */
+.queue__row--on {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+}

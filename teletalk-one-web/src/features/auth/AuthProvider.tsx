@@ -11,6 +11,9 @@ import {
 import { env } from '../../env'
 import { setUnauthorizedHandler } from '../../lib/http'
 import { logger } from '../../lib/logger'
+import { outbox } from '../../lib/outbox'
+import { clearAllDrafts } from '../wizard/draft'
+import { notificationStore } from '../counter/notificationStore'
 import * as api from './authApi'
 import type { Capability, Session } from './authTypes'
 
@@ -37,9 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [endedByIdle, setEndedByIdle] = useState(false)
 
   const idleTimer = useRef<number | undefined>(undefined)
+  /** Seconds the current access token is good for; set by sign-in and restore. */
+  const tokenLifetime = useRef(900)
 
   const clearSession = useCallback((idle: boolean) => {
     window.clearTimeout(idleTimer.current)
+    // A half-entered e-SAF and a queued mutation both belong to the session
+    // that raised them. Carrying either into the next sign-in would leave one
+    // retailer's customer on another retailer's screen — and would post the
+    // queued transaction under the wrong token. Nothing queued has reached the
+    // server, so nothing is lost that the counter cannot redo; `OutboxBanner`
+    // is what makes sure they are told before they sign out.
+    clearAllDrafts()
+    outbox.clear()
+    notificationStore.clear()
     setSession(null)
     setStatus('anonymous')
     setEndedByIdle(idle)
@@ -62,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession])
 
   const signIn = useCallback((result: api.SignInResult) => {
+    tokenLifetime.current = result.tokens.expiresIn
     setSession(result.session)
     setStatus('authenticated')
     setEndedByIdle(false)
@@ -78,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((result) => {
         if (cancelled) return
         if (result) {
+          tokenLifetime.current = result.tokens.expiresIn
           setSession(result.session)
           setStatus('authenticated')
         } else {
@@ -95,6 +111,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       controller.abort()
     }
   }, [])
+
+  /* --------------------- refresh before expiry --------------------- */
+
+  /**
+   * The access token is short-lived, and until now the only thing that noticed
+   * was a 401 — which arrives *during* whatever the retailer was doing. On a
+   * counter that means an e-SAF thrown away at the biometric step because a
+   * timer ran out between two keystrokes.
+   *
+   * So refresh early: at 80% of the token's life, or a minute before it
+   * expires, whichever comes first. A failure here is not a crisis — the 401
+   * handler is still there — so it is logged and retried once at half the
+   * remaining window rather than ending the session.
+   */
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let cancelled = false
+    let timer: number | undefined
+
+    const arm = (expiresInSeconds: number) => {
+      const lifetime = Math.max(expiresInSeconds, 30) * 1000
+      const lead = Math.min(lifetime * 0.2, 60_000)
+      timer = window.setTimeout(
+        () => {
+          api
+            .refreshTokens()
+            .then((next) => {
+              if (!cancelled) arm(next.expiresIn)
+            })
+            .catch((err: unknown) => {
+              // Leave the session alone. Either the next request succeeds on
+              // the token we still hold, or its 401 ends things cleanly.
+              logger.warn('token refresh failed; falling back to the 401 path', { err })
+              if (!cancelled) arm(Math.max(expiresInSeconds / 2, 30))
+            })
+        },
+        Math.max(lifetime - lead, 5_000),
+      )
+    }
+
+    arm(tokenLifetime.current)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [status])
 
   /* ------------------- 401 anywhere ends the session ------------------- */
 

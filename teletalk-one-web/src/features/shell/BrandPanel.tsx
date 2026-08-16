@@ -3,6 +3,7 @@ import { applyLang } from '../../i18n'
 import type { Lang } from '../../i18n/format'
 import { useTheme } from '../../app/ThemeProvider'
 import { BrandSpark, TeletalkMark } from '../../components/TeletalkMark'
+import { Icon } from '../../components/Icon'
 import './brand-panel.css'
 
 /**
@@ -76,7 +77,14 @@ export function BrandPanel() {
   )
 }
 
-/** Language and theme toggles for the signed-out shell. */
+/**
+ * Language and theme toggles for the signed-out shell.
+ *
+ * The same two symbols the signed-in top bar uses — a globe and a moon/sun,
+ * each naming what you will get rather than what you are in. Sign-in is the
+ * first screen anyone sees, so the control has to look the same on both sides
+ * of it; two labelled chips floating over the brand panel did not.
+ */
 export function ShellBar() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as Lang
@@ -87,15 +95,22 @@ export function ShellBar() {
     <div className="shell__bar">
       <button
         type="button"
-        className="chip"
+        className="iconbtn"
         onClick={() => applyLang(nextLang)}
-        lang={nextLang}
+        title={`${t('lang.label')}: ${t('lang.switchTo')}`}
         aria-label={`${t('lang.label')}: ${t('lang.switchTo')}`}
       >
-        {t('lang.switchTo')}
+        <Icon name="globe" size={20} />
       </button>
-      <button type="button" className="chip" onClick={cycle}>
-        {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+      <button
+        type="button"
+        className="iconbtn"
+        onClick={cycle}
+        title={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+        aria-label={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+        aria-pressed={theme === 'dark'}
+      >
+        <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
       </button>
     </div>
   )

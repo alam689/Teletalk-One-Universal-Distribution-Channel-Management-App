@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import { useAuth } from '../auth/AuthProvider'
+import { LockedService } from './LockedService'
 import { MENU } from './menu'
 import './stub.css'
 
@@ -25,22 +26,7 @@ export default function ModulePage() {
   // Deep links must be capability-checked too; hiding a tile is not access
   // control, and the URL is guessable.
   if (!can(item.capability)) {
-    return (
-      <div className="stub">
-        <span className="stub__icon stub__icon--muted">
-          <Icon name="lock" size={30} />
-        </span>
-        <h1 className="stub__title">{t(`item.${item.id}`)}</h1>
-        <p className="stub__body">{t('home.locked')}</p>
-        <p className="stub__cap">
-          <span>{t('stub.capability')}</span>
-          <code className="identifier">{item.capability}</code>
-        </p>
-        <Button variant="ghost" onClick={() => navigate('/services')}>
-          {t('nav.backToServices')}
-        </Button>
-      </div>
-    )
+    return <LockedService titleKey={`item.${item.id}`} capability={item.capability} />
   }
 
   return (

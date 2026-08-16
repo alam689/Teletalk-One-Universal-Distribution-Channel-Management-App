@@ -3,10 +3,10 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../../test/renderApp'
 import { LoginPage } from './LoginPage'
-import i18n from '../../i18n'
+import { applyLang } from '../../i18n'
 
 async function renderLogin() {
-  await i18n.changeLanguage('en')
+  await applyLang('en')
   const user = userEvent.setup()
   renderWithProviders(<LoginPage />, { route: '/login' })
   await screen.findByLabelText(/POS code/i)

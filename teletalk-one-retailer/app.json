@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Teletalk One Retailer",
+    "slug": "teletalk-one-retailer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "scheme": "teletalkone",
+    "primaryColor": "#0b7a4f",
+    "backgroundColor": "#f1f8f4",
+    "extra": {
+      "API_BASE_URL": "",
+      "API_TIMEOUT_MS": "30000",
+      "IDLE_TIMEOUT_MIN": "30"
+    }
+  }
+}

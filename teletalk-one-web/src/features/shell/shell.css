@@ -97,40 +97,6 @@
   margin-inline-start: auto;
 }
 
-.iconbtn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-
-.iconbtn:hover {
-  background: var(--surface-2);
-}
-
-.iconbtn__badge {
-  position: absolute;
-  inset-block-start: 9px;
-  inset-inline-end: 10px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--danger);
-  border: 2px solid var(--surface);
-}
-
-.chip--compact {
-  min-height: 38px;
-  padding: var(--space-1) var(--space-4);
-}
-
 /* ------------------------------- account ------------------------------ */
 
 .account {

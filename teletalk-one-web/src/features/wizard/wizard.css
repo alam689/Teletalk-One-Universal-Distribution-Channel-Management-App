@@ -1,0 +1,277 @@
+/* Wizard chrome — shared by every counter transaction. */
+
+/**
+ * The wizard was built mobile-first and, left alone, renders a 62ch column
+ * floating in the middle of a 1120px desktop shell — a phone screen in a
+ * browser window. From 900px it becomes two columns: a rail that answers
+ * "where am I and how much is left", and a main column carrying the one thing
+ * being asked for. Below 900px they stack and the rail lies down.
+ */
+.wiz {
+  position: relative;
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
+
+.wiz__rail,
+.wiz__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .wiz {
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+    gap: var(--space-7);
+    padding: var(--space-7);
+  }
+
+  /* The rail is reference material, so it is separated by a rule rather than
+     by a panel — a second card inside a card reads as two things to do. */
+  .wiz__rail {
+    padding-inline-end: var(--space-6);
+    border-inline-end: 1px solid var(--rule-soft);
+  }
+
+  .wiz__rail .stepper {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .wiz__rail .stepper__item {
+    align-items: flex-start;
+  }
+}
+
+.wiz__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.wiz__title {
+  font-size: var(--fs-xl);
+}
+
+.wiz__step {
+  font-size: var(--fs-lg);
+}
+
+/* The step heading takes focus on every step change; the ring must be visible
+   when it does, and absent when the retailer merely taps the text. */
+.wiz__step:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.wiz__count {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.wiz__resumed {
+  padding: var(--space-3) var(--space-4);
+  background: var(--brand-wash);
+  color: var(--brand);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+}
+
+.wiz__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.wiz__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--rule-soft);
+}
+
+/* Below the navigation breakpoint the footer is the only thing on screen worth
+   hitting, so the primary action takes the full width and the secondary ones
+   sit under it rather than shrinking to thumb-missing width. */
+@media (max-width: 720px) {
+  .wiz {
+    padding: var(--space-5) var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+  .wiz__foot > .btn--primary {
+    width: 100%;
+  }
+}
+
+/* The footer sits at the bottom of the main column, so it needs its own rule
+   above it rather than borrowing the card's edge. */
+@media (min-width: 900px) {
+  .wiz__foot {
+    margin-block-start: auto;
+  }
+}
+
+/* --------------------------- abandon dialog --------------------------- */
+
+.wiz__confirm {
+  position: absolute;
+  inset-block-end: var(--space-4);
+  inset-inline: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.wiz__confirmTitle {
+  font-size: var(--fs-lg);
+}
+
+.wiz__confirmBody {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+
+.wiz__confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ------------------------------ step body ------------------------------ */
+
+.wiz__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22ch), 1fr));
+  gap: var(--space-4);
+}
+
+/* Three across on a desktop e-SAF: the form is long, and a single column of
+   fourteen fields is a scroll nobody finishes reading. */
+@media (min-width: 1100px) {
+  .wiz__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.wiz__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wiz__legend {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.wiz__note {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  line-height: var(--lh-body);
+}
+
+/* Review rows — label left, value right, value never localised when it is an
+   identifier (the `identifier` class carries that). */
+.wiz__review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.wiz__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.wiz__row dt {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.wiz__row dd {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: end;
+}
+
+/* ------------------------------- receipt ------------------------------- */
+
+.wiz__done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.wiz__doneIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.wiz__doneIcon--pending {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.wiz__doneTitle {
+  font-size: var(--fs-lg);
+}
+
+/* ------------------------------ chip group ----------------------------- */
+
+.wiz__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.wiz__chip {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-control);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wiz__chip[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}

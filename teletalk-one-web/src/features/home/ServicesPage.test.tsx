@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../test/renderApp'
 import ServicesPage from './ServicesPage'
-import i18n from '../../i18n'
+import i18n, { applyLang } from '../../i18n'
 import { CAPABILITIES_BY_ROLE } from '../auth/roles'
 import { ALL_ITEMS } from './menu'
 import type { Role } from '../auth/authTypes'
 
 /** Seeds the mock's session marker so AuthProvider restores that role. */
 async function renderAs(posCode: string) {
-  await i18n.changeLanguage('en')
+  await applyLang('en')
   sessionStorage.setItem('teletalk.mock.pos', posCode)
   renderWithProviders(<ServicesPage />, { route: '/services' })
   await waitFor(() => expect(screen.getAllByRole('button').length).toBeGreaterThan(1))

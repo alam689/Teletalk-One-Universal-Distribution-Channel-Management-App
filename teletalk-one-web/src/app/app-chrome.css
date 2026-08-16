@@ -43,26 +43,40 @@
   text-align: center;
 }
 
-/* Chip — shared by the signed-out bar and the app top bar, so it lives in the
-   globally imported stylesheet rather than either feature's. */
+/* Icon button — shared by the signed-out bar and the app top bar, so it lives
+   in the globally imported stylesheet rather than either feature's. It sat in
+   `shell.css` while only the signed-in top bar used it; the sign-in screen
+   never loads that file, so its symbols would have rendered unstyled.
 
-.chip {
-  min-height: 38px;
-  padding: var(--space-1) var(--space-5);
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--rule-soft);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-sm);
-  font-size: var(--fs-sm);
-  font-weight: 600;
+   It replaced a `.chip` here, which now has no users at all. */
+
+.iconbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
   cursor: pointer;
-  transition: background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.chip:hover {
+.iconbtn:hover {
   background: var(--surface-2);
-  border-color: var(--brand-bright);
+}
+
+.iconbtn__badge {
+  position: absolute;
+  inset-block-start: 9px;
+  inset-inline-end: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--surface);
 }
 
 /* Skip link ----------------------------------------------------------- */
@@ -191,7 +205,7 @@
    Two independent breakpoints, deliberately different:
 
      720px — NAVIGATION MODE. Below it the bottom bar replaces the top nav.
-     900px — CHROME DENSITY. Below it the language and theme chips fold into
+     900px — CHROME DENSITY. Below it the language and theme symbols fold into
              the account menu, because the top bar cannot hold them beside a
              three-item nav and the outlet name.
 

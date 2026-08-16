@@ -27,6 +27,11 @@
   --muted: #5f7269;
   --rule: #e2eee8;
   --rule-soft: #edf5f1;
+  /* The edge of a control, not a decorative divider. `--rule` is 1.19:1 on
+     white — invisible to a low-vision retailer trying to find the input on a
+     bright counter. WCAG 1.4.11 wants 3:1 for a boundary you need in order to
+     identify a control, and this is that boundary. */
+  --rule-control: #7d968b;
 
   /* brand */
   --brand: #0b7a4f;
@@ -122,68 +127,14 @@ html[lang='en'] {
   --lh-tight: 1.25;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: #071310;
-    --paper-glow: radial-gradient(900px 520px at 10% -8%, rgba(0, 184, 77, 0.1), transparent 62%),
-      radial-gradient(760px 420px at 96% 2%, rgba(0, 150, 136, 0.07), transparent 58%);
-    --surface: #0e1d17;
-    --surface-2: #142720;
-    --surface-3: #1a3128;
-    --ink: #e6efe9;
-    --ink-soft: #c3d2cb;
-    --muted: #8ba299;
-    --rule: #21362d;
-    --rule-soft: #182a22;
-
-    --brand: #3fd183;
-    --brand-bright: #4fe096;
-    --brand-deep: #04241a;
-    --brand-hover: #56dd94;
-    --brand-ink: #04241a;
-    --brand-wash: #133527;
-    --brand-panel: #075437;
-    --on-brand: #ffffff;
-    --on-brand-soft: rgba(255, 255, 255, 0.93);
-
-    --accent-yellow: #ffd34d;
-
-    --cat-sim-well: #12332a;
-    --cat-sim-ink: #4ecf94;
-    --cat-mnp-well: #12283c;
-    --cat-mnp-ink: #6fb4ec;
-    --cat-recharge-well: #33260f;
-    --cat-recharge-ink: #e2ab5c;
-    --cat-stock-well: #241f3d;
-    --cat-stock-ink: #a99aec;
-    --cat-distribution-well: #0f2e2e;
-    --cat-distribution-ink: #5cc9c9;
-    --cat-finance-well: #2e2811;
-    --cat-finance-ink: #d6bd52;
-    --cat-report-well: #1e2040;
-    --cat-report-ink: #9aa2ee;
-    --cat-campaign-well: #351623;
-    --cat-campaign-ink: #ec8fb0;
-    --cat-service-well: #0f2b36;
-    --cat-service-ink: #63bcd9;
-    --cat-channel-well: #1e2a2f;
-    --cat-channel-ink: #a3bcc7;
-
-    --danger: #f0907a;
-    --danger-wash: #35190f;
-    --warn: #e0aa5e;
-    --warn-wash: #33260f;
-    --ok: #3fd183;
-    --ok-wash: #10301f;
-
-    --focus: #4fe096;
-    --focus-glow: rgba(79, 224, 150, 0.24);
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 36px -18px rgba(0, 0, 0, 0.85);
-    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 32px 64px -30px rgba(0, 0, 0, 0.95);
-  }
-}
+/**
+ * The dark palette lives on `[data-theme='dark']` below, and only there.
+ *
+ * A duplicate of it used to sit under `prefers-color-scheme: dark` to serve
+ * the old `system` theme. With the symbol-only toggle the app is light unless
+ * you ask for dark, so honouring the OS here would both contradict the stored
+ * choice and flash dark before the provider mounts.
+ */
 
 :root[data-theme='dark'] {
   --paper: #071310;
@@ -197,6 +148,7 @@ html[lang='en'] {
   --muted: #8ba299;
   --rule: #21362d;
   --rule-soft: #182a22;
+  --rule-control: #5c7f71;
 
   --brand: #3fd183;
   --brand-bright: #4fe096;

@@ -6,6 +6,7 @@ import { applyLang } from '../../i18n'
 import type { Lang } from '../../i18n/format'
 import { useAuth, useSession } from '../auth/AuthProvider'
 import { useTheme } from '../../app/ThemeProvider'
+import { useNotifications } from '../counter/notificationStore'
 import './shell.css'
 
 const TABS = [
@@ -18,11 +19,12 @@ export function AppShell() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as Lang
   const session = useSession()
-  const { signOut } = useAuth()
+  const { can, signOut } = useAuth()
   const { theme, cycle } = useTheme()
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
+  const { unread } = useNotifications(can('notification.view'))
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -90,32 +92,53 @@ export function AppShell() {
         </nav>
 
         <div className="topbar__actions">
-          <button
-            type="button"
-            className="iconbtn"
-            aria-label={`${t('nav.notifications')} — ${t('nav.unread', { count: 3 })}`}
-          >
-            <Icon name="bell" size={20} />
-            <span className="iconbtn__badge" aria-hidden="true" />
-          </button>
+          {/* Gated on the capability like everything else: a role that cannot
+              read the feed does not get a bell that leads to a locked screen. */}
+          {can('notification.view') && (
+            <button
+              type="button"
+              className="iconbtn"
+              onClick={() => navigate('/services/notifications')}
+              aria-label={
+                unread > 0
+                  ? `${t('nav.notifications')} — ${t('nav.unread', { count: unread })}`
+                  : t('nav.notifications')
+              }
+            >
+              <Icon name="bell" size={20} />
+              {unread > 0 && <span className="iconbtn__badge" aria-hidden="true" />}
+            </button>
+          )}
 
+          {/* Symbols, not words. Two labelled chips in a top bar that also
+              carries a wordmark, a POS code, a bell and an account control is
+              four competing text elements; as icons they read as controls at a
+              glance and stop crowding the outlet name.
+
+              Both name what you will GET, not what you are in — the globe
+              switches language, the moon takes you to dark. The words are
+              still there for anyone who wants them: `title` on hover, the
+              accessible name for a screen reader, and the account menu keeps
+              full text items on mobile. */}
           <button
             type="button"
-            className="chip chip--compact hide-sm"
-            onClick={() => applyLang(nextLang)}
-            lang={nextLang}
+            className="iconbtn hide-sm"
+            onClick={() => void applyLang(nextLang)}
+            title={`${t('lang.label')}: ${t('lang.switchTo')}`}
             aria-label={`${t('lang.label')}: ${t('lang.switchTo')}`}
           >
-            {t('lang.switchTo')}
+            <Icon name="globe" size={20} />
           </button>
 
           <button
             type="button"
-            className="chip chip--compact hide-sm"
+            className="iconbtn hide-sm"
             onClick={cycle}
+            title={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
             aria-label={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+            aria-pressed={theme === 'dark'}
           >
-            {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+            <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
           </button>
 
           <div className="account">
@@ -165,7 +188,7 @@ export function AppShell() {
                   type="button"
                   role="menuitem"
                   className="account__item show-sm"
-                  onClick={() => applyLang(nextLang)}
+                  onClick={() => void applyLang(nextLang)}
                   lang={nextLang}
                 >
                   <Icon name="globe" size={18} />
@@ -177,7 +200,7 @@ export function AppShell() {
                   className="account__item show-sm"
                   onClick={cycle}
                 >
-                  <Icon name="contrast" size={18} />
+                  <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
                   {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
                 </button>
                 <button

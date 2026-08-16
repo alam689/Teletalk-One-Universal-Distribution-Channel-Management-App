@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatDate,
+  formatDateTime,
   formatIdentifier,
   formatMoney,
   formatQuantity,
+  formatRelativeDay,
+  formatTime,
   maskMsisdn,
   toBengaliDigits,
   toLatinDigits,
@@ -91,5 +95,38 @@ describe('maskMsisdn', () => {
 
   it('returns short inputs unchanged rather than throwing', () => {
     expect(maskMsisdn('123')).toBe('123')
+  })
+})
+
+describe('dates', () => {
+  const DAY = '2026-08-16T09:30:00Z'
+
+  it('renders Bengali digits AND Bangla month names in bn', () => {
+    // The whole point of routing dates through Intl rather than through
+    // formatQuantity: ১৬ আগস্ট ২০২৬, not ১৬ Aug ২০২৬.
+    const bn = formatDate(DAY, 'bn')
+    expect(bn).toMatch(/[০-৯]/)
+    expect(bn).not.toMatch(/[A-Za-z]/)
+  })
+
+  it('stays Latin in en', () => {
+    expect(formatDate(DAY, 'en')).toMatch(/^\d{1,2} \w{3} \d{4}$/)
+  })
+
+  it('returns an empty string for an unparseable value, never a raw ISO string', () => {
+    expect(formatDate('not-a-date', 'bn')).toBe('')
+    expect(formatTime('', 'en')).toBe('')
+    expect(formatDateTime('nonsense', 'en')).toBe('')
+  })
+
+  it('says today and yesterday, and falls back to the date beyond that', () => {
+    // Local-time constructors, not ISO strings: "today" is a wall-clock
+    // question at the counter, and Dhaka is UTC+6 — an ISO fixture would make
+    // this test pass or fail depending on where CI runs.
+    const labels = { today: 'আজ', yesterday: 'গতকাল' }
+    const now = new Date(2026, 7, 16, 18, 0)
+    expect(formatRelativeDay(new Date(2026, 7, 16, 9, 0), 'bn', labels, now)).toBe('আজ')
+    expect(formatRelativeDay(new Date(2026, 7, 15, 23, 0), 'bn', labels, now)).toBe('গতকাল')
+    expect(formatRelativeDay(new Date(2026, 7, 10, 9, 0), 'bn', labels, now)).toMatch(/[০-৯]/)
   })
 })

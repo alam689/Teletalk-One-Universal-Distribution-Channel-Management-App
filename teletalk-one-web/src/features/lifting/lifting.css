@@ -1,0 +1,167 @@
+/* The lifting chain — queue, request detail, timeline, action panel. */
+
+/* ------------------------------- detail -------------------------------- */
+
+.lift {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lift__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.lift__id {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.lift__dealer {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.lift__progress {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+
+.lift__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lift__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--rule-soft);
+  font-size: var(--fs-sm);
+}
+
+.lift__qty {
+  font-weight: 700;
+}
+
+/* The cut quantity, struck through beside the approved one. Never colour
+   alone — a struck number reads as reduced without needing hue. */
+.lift__was {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ------------------------------ inventory ------------------------------ */
+
+.inv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.inv__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.inv__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.inv__numbers {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.inv__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.inv__label {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.inv__value {
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.inv__value--low {
+  color: var(--danger);
+}
+
+/* --------------------------------- SR ---------------------------------- */
+
+.stops {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-lg);
+}
+
+.stop__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stop__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.stop__meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.stop__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.stop__due {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--danger);
+}

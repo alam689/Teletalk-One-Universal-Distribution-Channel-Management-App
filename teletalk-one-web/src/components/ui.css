@@ -94,7 +94,7 @@
   display: flex;
   align-items: stretch;
   background: var(--surface);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-control);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -102,7 +102,7 @@
 }
 
 .field__control:focus-within {
-  border-color: var(--brand-bright);
+  border-color: var(--focus);
   box-shadow: 0 0 0 4px var(--focus-glow);
 }
 
@@ -138,6 +138,46 @@
 .field__input::placeholder {
   color: var(--muted);
   opacity: 0.7;
+}
+
+/* Native select. `appearance: none` only removes the chrome — the OS picker,
+   which is the whole reason for using it, is untouched. */
+.field__select {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  padding-inline-end: var(--space-8);
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-base);
+  appearance: none;
+  cursor: pointer;
+}
+
+.field__select:focus {
+  outline: none;
+}
+
+/* The caret, drawn on the wrapper so it survives `appearance: none`. */
+.field__control:has(.field__select) {
+  position: relative;
+}
+
+.field__control:has(.field__select)::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: var(--space-4);
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -6px;
+  border-inline-end: 2px solid var(--muted);
+  border-block-end: 2px solid var(--muted);
+  transform: rotate(45deg);
+  pointer-events: none;
 }
 
 .field__trailing {

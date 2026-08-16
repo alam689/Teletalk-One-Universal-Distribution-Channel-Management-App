@@ -1,0 +1,43 @@
+/* Queue notice. Sits directly under the offline banner and shares its metrics,
+   because the two appear together far more often than either appears alone. */
+
+.outbox-banner {
+  position: sticky;
+  top: 0;
+  z-index: 59;
+  padding: var(--space-2) var(--space-4);
+  padding-top: max(var(--space-2), env(safe-area-inset-top));
+  background: var(--brand-wash);
+  color: var(--brand);
+  border-block-end: 1px solid var(--brand-bright);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ----------------------------- queue status ---------------------------- */
+
+.outbox-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.outbox-state--pending {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.outbox-state--settled {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.outbox-state--failed {
+  background: var(--danger-wash);
+  color: var(--danger);
+}

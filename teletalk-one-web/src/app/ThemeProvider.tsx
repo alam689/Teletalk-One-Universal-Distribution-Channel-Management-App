@@ -9,7 +9,16 @@ import {
 } from 'react'
 import { readLocal, StorageKeys, writeLocal } from '../lib/storage'
 
-export type Theme = 'system' | 'light' | 'dark'
+/**
+ * Two states, and light is the default.
+ *
+ * There used to be a third, `system`, following `prefers-color-scheme`. It
+ * came out with the switch to a symbol-only control: a single icon can say
+ * "you are in light, tap for dark", but it cannot also say "you are following
+ * the operating system and that currently means light". A stored `system`
+ * from an earlier build is read as light.
+ */
+export type Theme = 'light' | 'dark'
 
 interface ThemeValue {
   theme: Theme
@@ -20,8 +29,7 @@ interface ThemeValue {
 const ThemeContext = createContext<ThemeValue | null>(null)
 
 function read(): Theme {
-  const v = readLocal(StorageKeys.theme)
-  return v === 'light' || v === 'dark' || v === 'system' ? v : 'system'
+  return readLocal(StorageKeys.theme) === 'dark' ? 'dark' : 'light'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -35,8 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // previous theme's colour. Suppress transitions for the swap frame only.
     root.setAttribute('data-theme-switching', '')
 
-    if (theme === 'system') root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', theme)
+    root.setAttribute('data-theme', theme)
 
     const raf = requestAnimationFrame(() =>
       requestAnimationFrame(() => root.removeAttribute('data-theme-switching')),
@@ -45,10 +52,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => cancelAnimationFrame(raf)
   }, [theme])
 
-  const cycle = useCallback(
-    () => setTheme((cur) => (cur === 'dark' ? 'light' : cur === 'light' ? 'system' : 'dark')),
-    [],
-  )
+  const cycle = useCallback(() => setTheme((cur) => (cur === 'dark' ? 'light' : 'dark')), [])
 
   const value = useMemo(() => ({ theme, setTheme, cycle }), [theme, cycle])
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

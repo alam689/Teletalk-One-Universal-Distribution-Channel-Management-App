@@ -1,0 +1,5143 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Teletalk One — channel API",
+    "version": "0.4.0",
+    "summary": "The contract the management portal is built against.",
+    "description": "Published as JSON rather than YAML so that `scripts/check-contract.mjs` can read it with no dependency at all; any tool will convert it. It is generated from nothing and generates one thing: `src/lib/apiRoutes.ts`. That file is the client's only source of paths, and CI fails if it drifts from this document — which is what makes the contract a file rather than a convention.\n\nThree rules below are load-bearing and must survive into the real service:\n\n1. **Capabilities, not roles.** `/auth/session` returns a capability set. Teletalk's real hierarchy is then a server-side change, not a frontend release.\n2. **Server-owned display strings are `{bn, en}`.** If BVS/CBS/DMS return English only, every screen is mixed-language no matter how well the client is built.\n3. **Mutations honour `Idempotency-Key`.** The client queues transactions offline and retries them under the original key. If the server performs the work twice on a replayed key, the customer is charged twice. This is the single most important line in this document."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.teletalk.com.bd/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Sign-in, session lifecycle, password"
+    },
+    {
+      "name": "catalogue",
+      "description": "Products offered at the counter"
+    },
+    {
+      "name": "kyc",
+      "description": "EC/NID verification"
+    },
+    {
+      "name": "transactions",
+      "description": "Counter transactions — queued, idempotent"
+    },
+    {
+      "name": "counter",
+      "description": "The read surface — stock, commission, ledger, sales, lookup, notifications"
+    },
+    {
+      "name": "lifting",
+      "description": "The distribution chain — demand, approval, deposit, invoice, challan, inventory, SR"
+    },
+    {
+      "name": "ops",
+      "description": "Outlet operations — requisition, complaints, money, stock movements"
+    },
+    {
+      "name": "channel",
+      "description": "Channel management — outlets, users, territory, visits, POSM, geo-fence, devices"
+    }
+  ],
+  "paths": {
+    "/auth/identity": {
+      "post": {
+        "operationId": "authIdentity",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Look up a POS code and report whether this device is trusted",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "posCode"
+                ],
+                "properties": {
+                  "posCode": {
+                    "$ref": "#/components/schemas/PosCode"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The outlet exists and may sign in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "posInactive",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "operationId": "authPassword",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify the outlet password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "posCode",
+                  "password"
+                ],
+                "properties": {
+                  "posCode": {
+                    "$ref": "#/components/schemas/PosCode"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password accepted; an OTP may now be requested"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/auth/otp": {
+      "post": {
+        "operationId": "authOtp",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Send a one-time code to the outlet's registered MSISDN",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "posCode"
+                ],
+                "properties": {
+                  "posCode": {
+                    "$ref": "#/components/schemas/PosCode"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Code sent"
+          },
+          "429": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "operationId": "authVerify",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Exchange the OTP for a session",
+        "description": "The refresh token is set as an httpOnly cookie. The access token is returned in the body and is held in memory only by the client — never localStorage, where an XSS is a token exfiltration.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "posCode",
+                  "otp",
+                  "trustDevice"
+                ],
+                "properties": {
+                  "posCode": {
+                    "$ref": "#/components/schemas/PosCode"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$"
+                  },
+                  "trustDevice": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "operationId": "authSession",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Restore the session from the refresh cookie",
+        "description": "Called once on boot. A 401 here is not an error condition — it is a signed-out user, and the client renders sign-in without a message.",
+        "responses": {
+          "200": {
+            "description": "A live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/auth/signout": {
+      "post": {
+        "operationId": "authSignOut",
+        "tags": [
+          "auth"
+        ],
+        "summary": "End the session and clear the refresh cookie",
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/account/password": {
+      "post": {
+        "operationId": "accountPassword",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change the outlet password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Changed"
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/catalogue/products": {
+      "get": {
+        "operationId": "catalogueProducts",
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "Plans the signed-in outlet may sell",
+        "responses": {
+          "200": {
+            "description": "Product list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kyc/nid": {
+      "post": {
+        "operationId": "kycNid",
+        "tags": [
+          "kyc"
+        ],
+        "summary": "Verify an NID against the Election Commission record",
+        "description": "`dateOfBirth` is a second factor: an NID number alone must never return a citizen's full record. The response prefills the e-SAF, which is where most of the counter's thirty minutes goes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nid",
+                  "dateOfBirth"
+                ],
+                "properties": {
+                  "nid": {
+                    "$ref": "#/components/schemas/Nid"
+                  },
+                  "dateOfBirth": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The citizen record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NidRecord"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "nidBlocked",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "description": "nidNotFound",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "description": "nidDobMismatch or nidSimLimit",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "operationId": "transactionList",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "The outlet's transaction ledger",
+        "description": "Server-confirmed transactions only. The client merges its own unsent queue into this list on screen, and marks those rows as local — a retailer asking \"did that go through?\" must be able to tell the two apart.",
+        "responses": {
+          "200": {
+            "description": "Most recent first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LedgerEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "transactionCreate",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Raise a counter transaction",
+        "description": "One endpoint for all five SIM flows; `kind` selects. The client may submit this minutes after the retailer pressed the button, from a queue, under the original `Idempotency-Key`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted by CBS. A replayed Idempotency-Key MUST return this same body without performing the work again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "biometricMismatch",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "description": "simNotInStock or msisdnNotFound",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "description": "simAlreadyActive",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/lifting/requests": {
+      "get": {
+        "operationId": "liftingRequests",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "Lifting requests this session may see",
+        "description": "**The server MUST scope this to the session's role, zone and territory.** A dealer must never receive another dealer's demand. The client filters the list again to build each desk's queue, but that is presentation — this endpoint is the access control.",
+        "responses": {
+          "200": {
+            "description": "Requests, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LiftingRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "liftingCreate",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "Raise a demand",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "quantities"
+                ],
+                "properties": {
+                  "quantities": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "description": "Product code to quantity."
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request as raised",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiftingRequest"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "demandEmpty or productUnknown",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/lifting/products": {
+      "get": {
+        "operationId": "liftingProducts",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "What a dealer may lift, at dealer price",
+        "description": "Separate from `/catalogue/products` because these are different numbers: a dealer lifts at trade price in whole packs, a retailer sells at face value in ones.",
+        "responses": {
+          "200": {
+            "description": "Liftable products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LiftingProduct"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lifting/actions": {
+      "post": {
+        "operationId": "liftingAct",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "Move a lifting request to the next desk",
+        "description": "One endpoint for every step of the chain; `action` selects.\n\n**The server MUST take the actor from the access token and ignore any actor in the body.** An approval chain in which the client names the approver is not an approval chain — and the audit trail this whole feature exists to produce would be worthless.\n\n**The server MUST re-check that the session holds the capability that owns the request's current stage.** Hiding a button is presentation; a request id is guessable.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiftingActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request, moved. A replayed Idempotency-Key MUST return this same body without advancing the chain a second time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiftingRequest"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session does not own this stage",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "409": {
+            "description": "stageMoved — another desk acted first",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/inventory": {
+      "get": {
+        "operationId": "inventoryStock",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "Central or zonal inventory",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "central",
+                "zonal"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stock and recent movements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inventory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sr/route": {
+      "get": {
+        "operationId": "srRoute",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "The retailers on a sales representative's route today",
+        "responses": {
+          "200": {
+            "description": "Route stops in visiting order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SrRoute"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sr/allocations": {
+      "post": {
+        "operationId": "srAllocate",
+        "tags": [
+          "lifting"
+        ],
+        "summary": "Allocate stock from the dealer to a sales representative",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "srPosCode",
+                  "quantities"
+                ],
+                "properties": {
+                  "srPosCode": {
+                    "$ref": "#/components/schemas/PosCode"
+                  },
+                  "quantities": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The allocation as recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SrAllocation"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "allocationExceedsStock",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/commission/statement": {
+      "get": {
+        "operationId": "commissionStatement",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Commission period by period, with payment references",
+        "description": "The reference on a settled period is the point of this endpoint — it is what a retailer quotes when they ring to ask where the money went.",
+        "responses": {
+          "200": {
+            "description": "Statement, newest period first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionStatement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outstanding": {
+      "get": {
+        "operationId": "outstandingList",
+        "tags": [
+          "counter"
+        ],
+        "summary": "What the outlet owes, and how much of it is overdue",
+        "responses": {
+          "200": {
+            "description": "Outstanding balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Outstanding"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/target": {
+      "get": {
+        "operationId": "targetReport",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Targets and achievement for the current period",
+        "responses": {
+          "200": {
+            "description": "Targets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "operationId": "campaignList",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Campaigns visible to this outlet",
+        "description": "`enrolled` distinguishes a campaign the outlet is actually in from one it could join, and `progress` is present only for the former. One endpoint serves both the campaign list and the outlet's own campaigns.",
+        "responses": {
+          "200": {
+            "description": "Campaigns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Campaign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers": {
+      "get": {
+        "operationId": "offerList",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Customer-facing offers the retailer can quote",
+        "responses": {
+          "200": {
+            "description": "Offers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Offer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mnp/requests": {
+      "get": {
+        "operationId": "mnpRequests",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Port-in and port-out requests raised by this outlet",
+        "description": "MNP completes at the regulator's pace, not the counter's, so this is the screen a retailer opens when a customer comes back to ask.",
+        "responses": {
+          "200": {
+            "description": "Requests, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MnpRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock": {
+      "get": {
+        "operationId": "stockList",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Stock held by the outlet, by batch",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "description": "`sim` batches carry a serial range; `product` batches do not.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sim",
+                "product"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stock on hand",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stock"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/commission": {
+      "get": {
+        "operationId": "commissionSummary",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Commission earned, split into paid and pending",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PeriodQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commission for the period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/sales": {
+      "get": {
+        "operationId": "salesReport",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Sales totals and a per-day series",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PeriodQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sales for the period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/search": {
+      "post": {
+        "operationId": "customerSearch",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Find a subscriber by MSISDN or NID",
+        "description": "POST, not GET, because the search term is an NID or an MSISDN and a query string is written to every proxy and access log between here and CBS.\n\nExact match only, and deliberately so: prefix search over a subscriber base is a data-protection incident waiting to be demonstrated, and the counter always has the whole number in front of it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 10,
+                    "description": "A full MSISDN or a full NID. Shorter values are rejected."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zero or one match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerRecord"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "notificationList",
+        "tags": [
+          "counter"
+        ],
+        "summary": "The outlet's notification feed",
+        "responses": {
+          "200": {
+            "description": "Most recent first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read": {
+      "post": {
+        "operationId": "notificationsRead",
+        "tags": [
+          "counter"
+        ],
+        "summary": "Mark notifications as read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The feed, with the given items marked read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/recharge": {
+      "post": {
+        "operationId": "transactionRecharge",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Recharge a number from the outlet's TeleCharge balance",
+        "description": "Idempotency is not a nicety here. Without it, a retry after a timeout charges the customer twice and the outlet's balance twice.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RechargeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recharged. A replayed Idempotency-Key MUST return this same body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RechargeResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "balanceInsufficient",
+            "$ref": "#/components/responses/DomainError"
+          },
+          "404": {
+            "description": "msisdnNotFound",
+            "$ref": "#/components/responses/DomainError"
+          }
+        }
+      }
+    },
+    "/requisitions": {
+      "get": {
+        "operationId": "requisitionList",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Requisitions this session may see",
+        "responses": {
+          "200": {
+            "description": "Requisitions this session may see",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Requisition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "requisitionCreate",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Raise a requisition",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "quantities"
+                ],
+                "properties": {
+                  "quantities": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Requisition"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "demandEmpty or productUnknown"
+          }
+        },
+        "description": "Stock moving down the channel against an allocation already paid for — which is why this chain has no deposit, no invoice and no revenue assurance. Three stages and one approver."
+      }
+    },
+    "/requisitions/actions": {
+      "post": {
+        "operationId": "requisitionAct",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Approve, fulfil or reject a requisition",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequisitionAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Requisition"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "The session does not hold the approving capability"
+          }
+        },
+        "description": "**The server MUST take the actor from the access token**, exactly as on the lifting chain."
+      }
+    },
+    "/complaints": {
+      "get": {
+        "operationId": "complaintList",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Complaints raised by this outlet",
+        "responses": {
+          "200": {
+            "description": "Complaints raised by this outlet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Complaint"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "complaintCreate",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Raise a complaint",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "category",
+                  "subject",
+                  "detail"
+                ],
+                "properties": {
+                  "category": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "detail": {
+                    "type": "string"
+                  },
+                  "msisdn": {
+                    "$ref": "#/components/schemas/Msisdn"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Complaint"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "categoryUnknown"
+          }
+        },
+        "description": "The server sets `slaDueOn` from the category's SLA. The client counts down to it rather than up from the raise time, so a breach is visible rather than arithmetic."
+      }
+    },
+    "/complaints/categories": {
+      "get": {
+        "operationId": "complaintCategories",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Complaint categories and their SLA windows",
+        "responses": {
+          "200": {
+            "description": "Complaint categories and their SLA windows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ComplaintCategory"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallet": {
+      "get": {
+        "operationId": "walletGet",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Wallet balance and ledger",
+        "responses": {
+          "200": {
+            "description": "Wallet balance and ledger",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallet/collect": {
+      "post": {
+        "operationId": "walletCollect",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Record cash collected from a retailer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewCollection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "collectionTooLarge"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "amountRequired"
+          }
+        }
+      }
+    },
+    "/settlements": {
+      "get": {
+        "operationId": "settlementList",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Settlement records",
+        "responses": {
+          "200": {
+            "description": "Settlement records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Settlement"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subsidy": {
+      "get": {
+        "operationId": "subsidySummary",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Subsidy entitlements",
+        "responses": {
+          "200": {
+            "description": "Subsidy entitlements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubsidySummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stock/movements": {
+      "post": {
+        "operationId": "stockMove",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Return stock, or transfer it to another outlet",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewMovement"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Movement"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "movementEmpty, reasonRequired, destinationRequired or destinationSameOutlet"
+          }
+        }
+      }
+    },
+    "/stock/reconcile": {
+      "get": {
+        "operationId": "stockReconcileLines",
+        "tags": [
+          "ops"
+        ],
+        "summary": "What the system believes is on the shelf",
+        "responses": {
+          "200": {
+            "description": "What the system believes is on the shelf",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReconcileLine"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "The counting sheet. The client shows these figures only after a count is entered, so the retailer counts the shelf rather than the screen."
+      },
+      "post": {
+        "operationId": "stockReconcile",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Submit a physical count",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "counts"
+                ],
+                "properties": {
+                  "counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "countEmpty"
+          }
+        }
+      }
+    },
+    "/customers/profile": {
+      "post": {
+        "operationId": "customerProfile",
+        "tags": [
+          "ops"
+        ],
+        "summary": "The full subscriber profile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "msisdn"
+                ],
+                "properties": {
+                  "msisdn": {
+                    "$ref": "#/components/schemas/Msisdn"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "msisdnNotFound"
+          }
+        },
+        "description": "POST, not GET: an MSISDN in a query string is written to every proxy log between here and CBS. Not idempotency-sensitive, but it shares the mutation shape."
+      }
+    },
+    "/reports/performance": {
+      "get": {
+        "operationId": "performanceReport",
+        "tags": [
+          "ops"
+        ],
+        "summary": "Outlet performance scorecard",
+        "responses": {
+          "200": {
+            "description": "Outlet performance scorecard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Performance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/retailers": {
+      "get": {
+        "operationId": "retailerList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Retailers this session covers",
+        "responses": {
+          "200": {
+            "description": "Retailers this session covers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RetailerSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "retailerCreate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Enlist a retailer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewRetailer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetailerSummary"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "retailerDuplicate"
+          }
+        },
+        "description": "A newly enlisted outlet comes back `pending`, not `active`: it holds no BVS id, no DMS access and no bound device, and so cannot sell anything. See `/retailers/provision`."
+      }
+    },
+    "/retailers/provision": {
+      "get": {
+        "operationId": "provisionList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Provisioning state per outlet",
+        "responses": {
+          "200": {
+            "description": "Provisioning state per outlet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RetailerProvision"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "provisionUpdate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Grant or withdraw BVS and DMS access",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetailerProvision"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "bvsIdRequired"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "outletNotFound"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "userList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Channel users",
+        "responses": {
+          "200": {
+            "description": "Channel users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelUser"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "userCreate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Create a channel user",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewChannelUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelUser"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "userDuplicate"
+          }
+        }
+      }
+    },
+    "/territories": {
+      "get": {
+        "operationId": "territoryList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Zone, territory and route hierarchy",
+        "responses": {
+          "200": {
+            "description": "Zone, territory and route hierarchy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TerritoryNode"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "`ownerName` is absent where nobody is assigned. A territory with nobody on it is the finding, not a rendering edge case."
+      }
+    },
+    "/field-visits": {
+      "get": {
+        "operationId": "fieldVisitList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Logged field visits",
+        "responses": {
+          "200": {
+            "description": "Logged field visits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FieldVisit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "fieldVisitCreate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Log a field visit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewFieldVisit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldVisit"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "outletNotFound"
+          }
+        },
+        "description": "The server computes `distanceMetres` between the captured fix and the outlet's registered point. A visit logged 4 km away is not evidence of a visit, and the number is what makes that checkable."
+      }
+    },
+    "/posm": {
+      "get": {
+        "operationId": "posmList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "POSM audits",
+        "responses": {
+          "200": {
+            "description": "POSM audits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PosmAudit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "posmCreate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Record a POSM audit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPosmAudit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PosmAudit"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "outletNotFound"
+          }
+        },
+        "description": "**`photoName` is a file name, not a file.** There is no upload endpoint in this contract yet — see the open question about attachments in STATUS.md. Whoever adds one should decide at the same time whether a photograph is evidence that must be retained."
+      }
+    },
+    "/posm/items": {
+      "get": {
+        "operationId": "posmItems",
+        "tags": [
+          "channel"
+        ],
+        "summary": "The POSM checklist",
+        "responses": {
+          "200": {
+            "description": "The POSM checklist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PosmItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/geofences": {
+      "get": {
+        "operationId": "geofenceList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Geo-fence per outlet",
+        "responses": {
+          "200": {
+            "description": "Geo-fence per outlet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Geofence"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "geofenceUpdate",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Set an outlet's geo-fence",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeofenceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replayed Idempotency-Key MUST return this same body without repeating the work.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Geofence"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "radiusRange"
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "outletNotFound"
+          }
+        }
+      }
+    },
+    "/devices": {
+      "get": {
+        "operationId": "deviceList",
+        "tags": [
+          "channel"
+        ],
+        "summary": "Devices bound to outlets, and when each was last seen",
+        "responses": {
+          "200": {
+            "description": "Devices bound to outlets, and when each was last seen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceRecord"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/numbers": {
+      "get": {
+        "operationId": "numberSearch",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Search the choice-number pool",
+        "description": "Substring match, not prefix — nobody asks for a number by its first digits. Expired holds are returned to the pool by the server before the search runs; the client never expires a hold itself.",
+        "parameters": [
+          {
+            "name": "pattern",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching numbers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChoiceNumber"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/numbers/reserve": {
+      "post": {
+        "operationId": "numberReserve",
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Hold a number while the customer decides",
+        "description": "**The server is the arbiter of this race.** Two counters can press reserve on the same number in the same second and no client can resolve that; the loser MUST receive `numberTaken`. The hold expires on the server's clock, not the client's.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "msisdn"
+                ],
+                "properties": {
+                  "msisdn": {
+                    "$ref": "#/components/schemas/Msisdn"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The hold. A replayed Idempotency-Key MUST return this same body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberReservation"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "numberNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "numberTaken"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "authRefresh",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Exchange the refresh cookie for a new access token",
+        "description": "Called by the client **before** the current token expires, not after a 401. A retailer halfway through an e-SAF must never be bounced to sign-in because a timer ran out between two keystrokes.\n\nIt returns tokens only — never a session — so a refresh cannot quietly change who the client thinks it is.",
+        "responses": {
+          "200": {
+            "description": "A fresh access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "accessToken",
+                    "expiresIn"
+                  ],
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "description": "Seconds."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/DomainError",
+            "description": "The refresh cookie is gone or revoked. The session is over."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Generated once by the client when the mutation is queued, and reused on every retry. The server MUST return the original response for a replayed key rather than performing the work again.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "PeriodQuery": {
+        "name": "period",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Period"
+        }
+      }
+    },
+    "responses": {
+      "DomainError": {
+        "description": "A domain failure. `code` maps onto the client's `error.*` keys.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "description": "The server sends codes, never prose: prose cannot be translated and cannot be switched on.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "examples": [
+              "posInactive",
+              "nidDobMismatch",
+              "simAlreadyActive"
+            ]
+          }
+        }
+      },
+      "Bilingual": {
+        "type": "object",
+        "required": [
+          "bn",
+          "en"
+        ],
+        "description": "Every server-owned display string. Bangla is the source locale.",
+        "properties": {
+          "bn": {
+            "type": "string"
+          },
+          "en": {
+            "type": "string"
+          }
+        }
+      },
+      "PosCode": {
+        "type": "string",
+        "pattern": "^[0-9]{8}$"
+      },
+      "Nid": {
+        "type": "string",
+        "pattern": "^([0-9]{10}|[0-9]{13}|[0-9]{17})$",
+        "description": "10-digit smart card, or 13/17-digit legacy."
+      },
+      "Msisdn": {
+        "type": "string",
+        "pattern": "^01[0-9]{9}$"
+      },
+      "IdentityResult": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "deviceTrusted"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "deviceTrusted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SignInResult": {
+        "type": "object",
+        "required": [
+          "session",
+          "tokens"
+        ],
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/Session"
+          },
+          "tokens": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "expiresIn"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "Seconds"
+              }
+            }
+          }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "name",
+          "ownerName",
+          "role",
+          "zone",
+          "territory",
+          "msisdn",
+          "outletAddress",
+          "enlistedOn",
+          "stats",
+          "capabilities",
+          "deviceTrusted",
+          "passwordUpdatedOn"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "ownerName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "role": {
+            "type": "string"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "territory": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "outletAddress": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "enlistedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "platinum",
+              "gold",
+              "silver"
+            ]
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "balance": {
+                "type": "number"
+              },
+              "commissionToday": {
+                "type": "number"
+              },
+              "simStock": {
+                "type": "integer"
+              },
+              "pendingApprovals": {
+                "type": "integer"
+              }
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "description": "The whole access model. Navigation and route guards render from this, never from `role`.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deviceTrusted": {
+            "type": "boolean"
+          },
+          "passwordUpdatedOn": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "price"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      },
+      "NidRecord": {
+        "type": "object",
+        "required": [
+          "nid",
+          "nameBn",
+          "nameEn",
+          "fatherNameBn",
+          "motherNameBn",
+          "dateOfBirth",
+          "gender",
+          "division",
+          "district",
+          "upazila",
+          "postCode",
+          "addressLine",
+          "simsOnNid"
+        ],
+        "properties": {
+          "nid": {
+            "$ref": "#/components/schemas/Nid"
+          },
+          "nameBn": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "fatherNameBn": {
+            "type": "string"
+          },
+          "motherNameBn": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female",
+              "other"
+            ]
+          },
+          "division": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "upazila": {
+            "type": "string"
+          },
+          "postCode": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$"
+          },
+          "addressLine": {
+            "type": "string"
+          },
+          "simsOnNid": {
+            "type": "integer",
+            "description": "SIMs already registered to this NID across all operators. BTRC caps this at 15."
+          }
+        }
+      },
+      "EsafRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "parents",
+          "dateOfBirth",
+          "gender",
+          "nid",
+          "contactMsisdn",
+          "address",
+          "consent"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "parents": {
+            "type": "object",
+            "required": [
+              "fatherBn",
+              "motherBn"
+            ],
+            "properties": {
+              "fatherBn": {
+                "type": "string"
+              },
+              "motherBn": {
+                "type": "string"
+              }
+            }
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "description": "The subscriber must be 18 or older on the day of registration."
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female",
+              "other"
+            ]
+          },
+          "nid": {
+            "$ref": "#/components/schemas/Nid"
+          },
+          "contactMsisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "address": {
+            "type": "object",
+            "required": [
+              "division",
+              "district",
+              "upazila",
+              "postCode",
+              "line"
+            ],
+            "properties": {
+              "division": {
+                "type": "string"
+              },
+              "district": {
+                "type": "string"
+              },
+              "upazila": {
+                "type": "string"
+              },
+              "postCode": {
+                "type": "string",
+                "pattern": "^[0-9]{4}$"
+              },
+              "line": {
+                "type": "string"
+              }
+            }
+          },
+          "consent": {
+            "type": "object",
+            "required": [
+              "kyc",
+              "marketing"
+            ],
+            "properties": {
+              "kyc": {
+                "type": "boolean",
+                "description": "Regulatory. The client refuses to submit without it."
+              },
+              "marketing": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "BiometricCapture": {
+        "type": "object",
+        "required": [
+          "method",
+          "reference",
+          "capturedAt"
+        ],
+        "description": "A browser cannot read a fingerprint scanner, so the web client only ever sends `device` — the reference returned by an external BVS capture. The React Native app sends `fingerprint`; the shape does not change.",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "fingerprint",
+              "device"
+            ]
+          },
+          "reference": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransactionRequest": {
+        "type": "object",
+        "required": [
+          "kind",
+          "posCode"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "activation",
+              "replacement",
+              "portIn",
+              "portOut",
+              "ownership",
+              "planMigration"
+            ]
+          },
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "simSerial": {
+            "type": "string",
+            "pattern": "^89[0-9]{17,18}$",
+            "description": "ICCID as printed on the pack."
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "donorOperator": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string",
+            "enum": [
+              "lost",
+              "stolen",
+              "damaged",
+              "upgrade"
+            ]
+          },
+          "esaf": {
+            "$ref": "#/components/schemas/EsafRequest"
+          },
+          "biometric": {
+            "$ref": "#/components/schemas/BiometricCapture"
+          }
+        }
+      },
+      "TransactionResult": {
+        "type": "object",
+        "required": [
+          "transactionId",
+          "msisdn",
+          "status",
+          "completedAt"
+        ],
+        "properties": {
+          "transactionId": {
+            "type": "string"
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn",
+            "description": "For an activation this is assigned by CBS and is news to the caller."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pendingVerification"
+            ],
+            "description": "Port-in and ownership change complete at the regulator's pace, not the counter's."
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RechargeRequest": {
+        "type": "object",
+        "required": [
+          "amount",
+          "posCode",
+          "channel"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn",
+            "description": "Absent for a channel that does not target a number — a scratch card is sold off the shelf and the customer enters the PIN themselves."
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 5000
+          },
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "sell",
+              "flexiload",
+              "powerload",
+              "tbps",
+              "productSell",
+              "scratchCard"
+            ],
+            "description": "The counter treats these as different products with different commission, so it travels with the request rather than being inferred from the screen the retailer opened. **The commercial distinction between flexiload, powerload and TBPS is an assumption in this document and needs confirming.**"
+          },
+          "productCode": {
+            "type": "string",
+            "description": "For a product sale rather than airtime."
+          }
+        }
+      },
+      "LiftingStage": {
+        "type": "string",
+        "description": "Who is holding the request. Each name says who is waiting.",
+        "enum": [
+          "requested",
+          "recommended",
+          "approved",
+          "depositRaised",
+          "depositVerified",
+          "invoiced",
+          "assured",
+          "dispatched",
+          "closed",
+          "returned",
+          "rejected"
+        ]
+      },
+      "LiftingAction": {
+        "type": "string",
+        "enum": [
+          "create",
+          "recommend",
+          "approve",
+          "attachDeposit",
+          "verifyDeposit",
+          "invoice",
+          "assure",
+          "dispatch",
+          "confirmReceipt",
+          "return",
+          "reject"
+        ]
+      },
+      "LiftingProduct": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "unitPrice",
+          "packSize"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Trade price, not face value."
+          },
+          "packSize": {
+            "type": "integer",
+            "description": "Demand is raised in whole packs — a dealer cannot lift 37 SIMs."
+          }
+        }
+      },
+      "LiftingLine": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "productName",
+          "requested",
+          "unitPrice"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "requested": {
+            "type": "integer"
+          },
+          "approved": {
+            "type": "integer",
+            "description": "What the zonal in-charge actually approved. Absent until approval."
+          },
+          "unitPrice": {
+            "type": "number"
+          }
+        }
+      },
+      "LiftingEvent": {
+        "type": "object",
+        "required": [
+          "at",
+          "action",
+          "actorPosCode",
+          "actorName",
+          "actorRole"
+        ],
+        "description": "One entry in the chain's history — the part that replaces the email thread, which is why it records the actor and not just the change.",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "$ref": "#/components/schemas/LiftingAction"
+          },
+          "actorPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "actorName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "actorRole": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "description": "Free text a person wrote. Not translated, and never machine-generated."
+          }
+        }
+      },
+      "DepositSlip": {
+        "type": "object",
+        "required": [
+          "bankName",
+          "branch",
+          "slipNumber",
+          "depositedOn",
+          "amount"
+        ],
+        "properties": {
+          "bankName": {
+            "type": "string"
+          },
+          "branch": {
+            "type": "string"
+          },
+          "slipNumber": {
+            "type": "string"
+          },
+          "depositedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "LiftingRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "stage",
+          "dealerPosCode",
+          "dealerName",
+          "zone",
+          "territory",
+          "raisedOn",
+          "lines",
+          "value",
+          "history"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/LiftingStage"
+          },
+          "dealerPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "dealerName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "territory": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "raisedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiftingLine"
+            }
+          },
+          "value": {
+            "type": "number"
+          },
+          "deposit": {
+            "$ref": "#/components/schemas/DepositSlip"
+          },
+          "invoiceNumber": {
+            "type": "string",
+            "description": "**Open question.** The client records an invoice number raised in ERP rather than generating one. If Teletalk One is to *generate* the invoice, this becomes a server-side sequence and the invoice desk changes shape."
+          },
+          "challanNumber": {
+            "type": "string"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiftingEvent"
+            }
+          }
+        }
+      },
+      "LiftingActionRequest": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "action"
+        ],
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/components/schemas/LiftingAction"
+          },
+          "note": {
+            "type": "string"
+          },
+          "approvedQuantities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Zonal approval may cut the quantity. Product code to approved quantity."
+          },
+          "deposit": {
+            "$ref": "#/components/schemas/DepositSlip"
+          },
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "challanNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "InventoryLine": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "productName",
+          "onHand",
+          "allocated",
+          "reorderLevel"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "onHand": {
+            "type": "integer"
+          },
+          "allocated": {
+            "type": "integer",
+            "description": "Committed to approved lifting requests but not yet dispatched."
+          },
+          "reorderLevel": {
+            "type": "integer"
+          }
+        }
+      },
+      "InventoryMovement": {
+        "type": "object",
+        "required": [
+          "at",
+          "reference",
+          "productCode",
+          "quantity",
+          "direction"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out"
+            ]
+          }
+        }
+      },
+      "Inventory": {
+        "type": "object",
+        "required": [
+          "scope",
+          "lines",
+          "movements"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "central",
+              "zonal"
+            ]
+          },
+          "location": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryLine"
+            }
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryMovement"
+            }
+          }
+        }
+      },
+      "SrRouteStop": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "name",
+          "address",
+          "status"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "address": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "visited",
+              "skipped"
+            ]
+          },
+          "lastVisitedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "outstanding": {
+            "type": "number"
+          }
+        }
+      },
+      "SrRoute": {
+        "type": "object",
+        "required": [
+          "srPosCode",
+          "srName",
+          "date",
+          "stops"
+        ],
+        "properties": {
+          "srPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "srName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "stops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SrRouteStop"
+            }
+          }
+        }
+      },
+      "SrAllocation": {
+        "type": "object",
+        "required": [
+          "id",
+          "srPosCode",
+          "allocatedOn",
+          "lines"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "srPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "allocatedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "productCode",
+                "productName",
+                "quantity"
+              ],
+              "properties": {
+                "productCode": {
+                  "type": "string"
+                },
+                "productName": {
+                  "$ref": "#/components/schemas/Bilingual"
+                },
+                "quantity": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "StatementLine": {
+        "type": "object",
+        "required": [
+          "period",
+          "label",
+          "earned",
+          "paid",
+          "status"
+        ],
+        "properties": {
+          "period": {
+            "type": "string",
+            "examples": [
+              "2026-07"
+            ]
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "earned": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "number"
+          },
+          "paidOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reference": {
+            "type": "string",
+            "description": "Settlement reference. Absent while a period is unpaid."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "pending"
+            ]
+          }
+        }
+      },
+      "CommissionStatement": {
+        "type": "object",
+        "required": [
+          "totalEarned",
+          "totalPaid",
+          "lines"
+        ],
+        "properties": {
+          "totalEarned": {
+            "type": "number"
+          },
+          "totalPaid": {
+            "type": "number"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            }
+          }
+        }
+      },
+      "OutstandingItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "what",
+          "amount",
+          "dueOn",
+          "overdueDays"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "what": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "dueOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "overdueDays": {
+            "type": "integer",
+            "description": "Zero when not yet due."
+          }
+        }
+      },
+      "Outstanding": {
+        "type": "object",
+        "required": [
+          "total",
+          "overdue",
+          "items"
+        ],
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "overdue": {
+            "type": "number"
+          },
+          "creditLimit": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutstandingItem"
+            }
+          }
+        }
+      },
+      "TargetLine": {
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "target",
+          "achieved",
+          "unit"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "target": {
+            "type": "number"
+          },
+          "achieved": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "count",
+              "money"
+            ]
+          }
+        }
+      },
+      "TargetSummary": {
+        "type": "object",
+        "required": [
+          "period",
+          "daysLeft",
+          "lines"
+        ],
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "daysLeft": {
+            "type": "integer"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TargetLine"
+            }
+          }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "body",
+          "startsOn",
+          "endsOn",
+          "enrolled"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "body": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "startsOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "enrolled": {
+            "type": "boolean"
+          },
+          "progress": {
+            "type": "object",
+            "description": "Present only for a campaign the outlet is actually in.",
+            "required": [
+              "target",
+              "achieved",
+              "rewardAmount"
+            ],
+            "properties": {
+              "target": {
+                "type": "number"
+              },
+              "achieved": {
+                "type": "number"
+              },
+              "rewardAmount": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "Offer": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "body"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "body": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "price": {
+            "type": "number"
+          },
+          "validity": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "code": {
+            "type": "string",
+            "description": "What the customer dials. An identifier — never localised.",
+            "examples": [
+              "*111*49#"
+            ]
+          }
+        }
+      },
+      "MnpRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "direction",
+          "msisdn",
+          "raisedOn",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out"
+            ]
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Donor for a port-in, recipient for a port-out."
+          },
+          "raisedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "submitted",
+              "withOperator",
+              "approved",
+              "rejected",
+              "completed"
+            ]
+          },
+          "note": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "expectedBy": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Period": {
+        "type": "string",
+        "enum": [
+          "today",
+          "week",
+          "month"
+        ]
+      },
+      "StockBatch": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "productName",
+          "count",
+          "receivedOn"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "firstSerial": {
+            "type": "string"
+          },
+          "lastSerial": {
+            "type": "string",
+            "description": "With firstSerial, the physical range in the box — what a shelf count is checked against. Absent for product stock, which has no serials."
+          },
+          "receivedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Stock": {
+        "type": "object",
+        "required": [
+          "type",
+          "total",
+          "lowThreshold",
+          "batches"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "sim",
+              "product"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          },
+          "lowThreshold": {
+            "type": "integer",
+            "description": "Below this the outlet should raise a requisition. Server-owned, because it varies by tier."
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockBatch"
+            }
+          }
+        }
+      },
+      "CommissionLine": {
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "count",
+          "amount"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "CommissionSummary": {
+        "type": "object",
+        "required": [
+          "period",
+          "total",
+          "paid",
+          "pending",
+          "lines"
+        ],
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "total": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "number"
+          },
+          "pending": {
+            "type": "number",
+            "description": "Earned but not settled. The number retailers actually ring the zonal office about."
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommissionLine"
+            }
+          }
+        }
+      },
+      "LedgerEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "msisdn",
+          "at",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "activation",
+              "replacement",
+              "portIn",
+              "ownership",
+              "planMigration",
+              "recharge",
+              "productSell"
+            ]
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "settled",
+              "pending",
+              "failed",
+              "reversed"
+            ]
+          },
+          "note": {
+            "$ref": "#/components/schemas/Bilingual",
+            "description": "Why it is in that state, in both languages. A retailer reads this aloud."
+          }
+        }
+      },
+      "SalesSummary": {
+        "type": "object",
+        "required": [
+          "period",
+          "activations",
+          "recharges",
+          "rechargeAmount",
+          "commission",
+          "points"
+        ],
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "activations": {
+            "type": "integer"
+          },
+          "recharges": {
+            "type": "integer"
+          },
+          "rechargeAmount": {
+            "type": "number"
+          },
+          "commission": {
+            "type": "number"
+          },
+          "target": {
+            "type": "integer"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "activations",
+                "rechargeAmount"
+              ],
+              "properties": {
+                "day": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "activations": {
+                  "type": "integer"
+                },
+                "rechargeAmount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CustomerRecord": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "name",
+          "nid",
+          "status",
+          "productName",
+          "activatedOn"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "nid": {
+            "$ref": "#/components/schemas/Nid",
+            "description": "Never rendered unmasked by the client."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "barred",
+              "inactive"
+            ]
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "activatedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NotificationItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "body",
+          "at",
+          "read",
+          "severity"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "body": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warn",
+              "action"
+            ]
+          }
+        }
+      },
+      "RechargeResult": {
+        "type": "object",
+        "required": [
+          "transactionId",
+          "amount",
+          "balanceAfter",
+          "completedAt"
+        ],
+        "properties": {
+          "transactionId": {
+            "type": "string"
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "balanceAfter": {
+            "type": "number"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RequisitionLine": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "productName",
+          "requested"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "requested": {
+            "type": "integer"
+          },
+          "approved": {
+            "type": "integer"
+          }
+        }
+      },
+      "RequisitionEvent": {
+        "type": "object",
+        "required": [
+          "at",
+          "action",
+          "actorPosCode",
+          "actorName"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "approve",
+              "fulfil",
+              "reject"
+            ]
+          },
+          "actorPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "actorName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Requisition": {
+        "type": "object",
+        "required": [
+          "id",
+          "stage",
+          "outletPosCode",
+          "outletName",
+          "raisedOn",
+          "lines",
+          "history"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "raised",
+              "approved",
+              "fulfilled",
+              "rejected"
+            ]
+          },
+          "outletPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "raisedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequisitionLine"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequisitionEvent"
+            }
+          }
+        }
+      },
+      "RequisitionAction": {
+        "type": "object",
+        "required": [
+          "requisitionId",
+          "action"
+        ],
+        "properties": {
+          "requisitionId": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "fulfil",
+              "reject"
+            ]
+          },
+          "approvedQuantities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "ComplaintCategory": {
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "slaHours"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "slaHours": {
+            "type": "integer",
+            "description": "Hours the SLA allows."
+          }
+        }
+      },
+      "ComplaintUpdate": {
+        "type": "object",
+        "required": [
+          "at",
+          "by",
+          "note"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Complaint": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "categoryLabel",
+          "subject",
+          "status",
+          "raisedOn",
+          "slaDueOn",
+          "updates"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "categoryLabel": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "inProgress",
+              "resolved",
+              "closed"
+            ]
+          },
+          "raisedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slaDueOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComplaintUpdate"
+            }
+          }
+        }
+      },
+      "WalletEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "kind",
+          "amount",
+          "balanceAfter"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "topUp",
+              "sale",
+              "commission",
+              "adjustment",
+              "collection"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "description": "Signed. Negative is money leaving the wallet."
+          },
+          "balanceAfter": {
+            "type": "number"
+          },
+          "reference": {
+            "type": "string"
+          }
+        }
+      },
+      "Wallet": {
+        "type": "object",
+        "required": [
+          "balance",
+          "entries"
+        ],
+        "properties": {
+          "balance": {
+            "type": "number"
+          },
+          "creditLimit": {
+            "type": "number"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletEntry"
+            }
+          }
+        }
+      },
+      "NewCollection": {
+        "type": "object",
+        "required": [
+          "fromPosCode",
+          "amount",
+          "method"
+        ],
+        "properties": {
+          "fromPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 1
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "bank",
+              "mfs"
+            ]
+          },
+          "reference": {
+            "type": "string"
+          }
+        }
+      },
+      "Collection": {
+        "type": "object",
+        "required": [
+          "id",
+          "fromPosCode",
+          "amount",
+          "method",
+          "collectedOn"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fromPosCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "bank",
+              "mfs"
+            ]
+          },
+          "collectedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Settlement": {
+        "type": "object",
+        "required": [
+          "id",
+          "period",
+          "grossSales",
+          "commission",
+          "deductions",
+          "net",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "grossSales": {
+            "type": "number"
+          },
+          "commission": {
+            "type": "number"
+          },
+          "deductions": {
+            "type": "number",
+            "description": "Withheld: tax, POSM recoveries, adjustments."
+          },
+          "net": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "settled",
+              "pending"
+            ]
+          },
+          "settledOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reference": {
+            "type": "string"
+          }
+        }
+      },
+      "SubsidyItem": {
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "basis",
+          "rate",
+          "earned",
+          "status"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "perActivation",
+              "monthly"
+            ]
+          },
+          "rate": {
+            "type": "number"
+          },
+          "earned": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "pending"
+            ]
+          }
+        }
+      },
+      "SubsidySummary": {
+        "type": "object",
+        "required": [
+          "total",
+          "paid",
+          "pending",
+          "items"
+        ],
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "number"
+          },
+          "pending": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubsidyItem"
+            }
+          }
+        }
+      },
+      "MovementLine": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "quantity"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "NewMovement": {
+        "type": "object",
+        "required": [
+          "kind",
+          "lines"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "return",
+              "transfer"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovementLine"
+            }
+          },
+          "reasonCode": {
+            "type": "string",
+            "description": "Required on a return."
+          },
+          "toPosCode": {
+            "$ref": "#/components/schemas/PosCode",
+            "description": "Required on a transfer."
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Movement": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "raisedOn",
+          "status",
+          "lines"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "return",
+              "transfer"
+            ]
+          },
+          "raisedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "submitted",
+              "accepted",
+              "rejected"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovementLine"
+            }
+          }
+        }
+      },
+      "ReconcileLine": {
+        "type": "object",
+        "required": [
+          "productCode",
+          "productName",
+          "system"
+        ],
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "system": {
+            "type": "integer"
+          }
+        }
+      },
+      "ReconcileResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "countedOn",
+          "variance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "countedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "variance": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Signed per product: counted minus system."
+          }
+        }
+      },
+      "CustomerSim": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "status",
+          "productName",
+          "activatedOn"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "barred",
+              "inactive"
+            ]
+          },
+          "productName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "activatedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomerProfile": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "name",
+          "nid",
+          "balance",
+          "planName",
+          "rechargeLast30Days",
+          "sims",
+          "recentTransactions"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "nid": {
+            "$ref": "#/components/schemas/Nid",
+            "description": "Never rendered unmasked by the client."
+          },
+          "balance": {
+            "type": "number"
+          },
+          "planName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "lastRechargeOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rechargeLast30Days": {
+            "type": "number"
+          },
+          "sims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerSim"
+            },
+            "description": "Every SIM on this NID — what the 15-SIM ceiling is counted from."
+          },
+          "recentTransactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntry"
+            }
+          }
+        }
+      },
+      "PerformanceScore": {
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "score",
+          "max",
+          "trend"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "score": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "trend": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "flat"
+            ]
+          }
+        }
+      },
+      "Performance": {
+        "type": "object",
+        "required": [
+          "period",
+          "overall",
+          "scores"
+        ],
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "overall": {
+            "type": "number"
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "ofOutlets": {
+            "type": "integer"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceScore"
+            }
+          }
+        }
+      },
+      "RetailerSummary": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "name",
+          "ownerName",
+          "territory",
+          "status",
+          "enlistedOn",
+          "simStock"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "ownerName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "territory": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "platinum",
+              "gold",
+              "silver"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "pending"
+            ]
+          },
+          "enlistedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastActiveOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "simStock": {
+            "type": "integer"
+          }
+        }
+      },
+      "NewRetailer": {
+        "type": "object",
+        "required": [
+          "nameBn",
+          "nameEn",
+          "ownerNameBn",
+          "ownerNameEn",
+          "nid",
+          "msisdn",
+          "territory",
+          "addressLine"
+        ],
+        "properties": {
+          "nameBn": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "ownerNameBn": {
+            "type": "string"
+          },
+          "ownerNameEn": {
+            "type": "string"
+          },
+          "nid": {
+            "$ref": "#/components/schemas/Nid"
+          },
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "territory": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          }
+        }
+      },
+      "RetailerProvision": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "outletName",
+          "bvsEnabled",
+          "dmsEnabled",
+          "deviceBound"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "bvsId": {
+            "type": "string"
+          },
+          "bvsEnabled": {
+            "type": "boolean"
+          },
+          "dmsEnabled": {
+            "type": "boolean"
+          },
+          "deviceBound": {
+            "type": "boolean",
+            "description": "Set by the device itself on first sign-in, not from this screen."
+          },
+          "updatedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProvisionUpdate": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "bvsEnabled",
+          "dmsEnabled"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "bvsId": {
+            "type": "string"
+          },
+          "bvsEnabled": {
+            "type": "boolean"
+          },
+          "dmsEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ChannelUser": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "name",
+          "role",
+          "status"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "role": {
+            "type": "string"
+          },
+          "territory": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "lastSignInOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewChannelUser": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "nameBn",
+          "nameEn",
+          "role"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "nameBn": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "territory": {
+            "type": "string"
+          }
+        }
+      },
+      "TerritoryNode": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "kind",
+          "outlets"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "zone",
+              "territory",
+              "route"
+            ]
+          },
+          "outlets": {
+            "type": "integer"
+          },
+          "ownerName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TerritoryNode"
+            }
+          }
+        }
+      },
+      "GeoPoint": {
+        "type": "object",
+        "required": [
+          "lat",
+          "lng",
+          "accuracy"
+        ],
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "accuracy": {
+            "type": "number",
+            "description": "Metres. A fix with 800 m accuracy is not evidence of a visit."
+          }
+        }
+      },
+      "FieldVisit": {
+        "type": "object",
+        "required": [
+          "id",
+          "posCode",
+          "outletName",
+          "visitedOn",
+          "purpose"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "visitedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "routine",
+              "stock",
+              "complaint",
+              "training",
+              "audit"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoPoint"
+          },
+          "distanceMetres": {
+            "type": "integer",
+            "description": "Between the captured fix and the outlet's registered point."
+          }
+        }
+      },
+      "NewFieldVisit": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "purpose"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "routine",
+              "stock",
+              "complaint",
+              "training",
+              "audit"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoPoint"
+          }
+        }
+      },
+      "PosmItem": {
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Bilingual"
+          }
+        }
+      },
+      "PosmAudit": {
+        "type": "object",
+        "required": [
+          "id",
+          "posCode",
+          "outletName",
+          "auditedOn",
+          "present",
+          "missing"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "auditedOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "present": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoName": {
+            "type": "string",
+            "description": "A file name. There is no upload endpoint yet."
+          }
+        }
+      },
+      "NewPosmAudit": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "present"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "present": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoName": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Geofence": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "outletName",
+          "lat",
+          "lng",
+          "radiusMetres"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "radiusMetres": {
+            "type": "integer",
+            "description": "How far from the registered point a transaction may be raised. 50–2000."
+          },
+          "updatedOn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GeofenceUpdate": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "lat",
+          "lng",
+          "radiusMetres"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "radiusMetres": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 2000
+          }
+        }
+      },
+      "DeviceRecord": {
+        "type": "object",
+        "required": [
+          "posCode",
+          "outletName",
+          "deviceId",
+          "model",
+          "appVersion",
+          "lastSeenOn",
+          "state"
+        ],
+        "properties": {
+          "posCode": {
+            "$ref": "#/components/schemas/PosCode"
+          },
+          "outletName": {
+            "$ref": "#/components/schemas/Bilingual"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "appVersion": {
+            "type": "string"
+          },
+          "lastSeenOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "online",
+              "stale",
+              "offline"
+            ]
+          }
+        }
+      },
+      "ChoiceNumber": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "tier",
+          "price",
+          "status"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "platinum",
+              "gold",
+              "silver"
+            ],
+            "description": "Pricing band, set by the pattern in the digits rather than by the SIM."
+          },
+          "price": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "reserved",
+              "sold"
+            ]
+          },
+          "reservedUntil": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NumberReservation": {
+        "type": "object",
+        "required": [
+          "msisdn",
+          "reservedUntil",
+          "price"
+        ],
+        "properties": {
+          "msisdn": {
+            "$ref": "#/components/schemas/Msisdn"
+          },
+          "reservedUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

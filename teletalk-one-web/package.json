@@ -18,7 +18,10 @@
     "test:watch": "vitest",
     "i18n:check": "node scripts/check-locales.mjs",
     "css:check": "node scripts/check-css-imports.mjs",
-    "verify": "npm run typecheck && npm run i18n:check && npm run css:check && npm run lint && npm run test && npm run build"
+    "contract:generate": "node scripts/generate-routes.mjs",
+    "contract:check": "node scripts/check-contract.mjs",
+    "contrast:check": "node scripts/check-contrast.mjs",
+    "verify": "npm run typecheck && npm run i18n:check && npm run css:check && npm run contract:check && npm run contrast:check && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@fontsource/noto-sans-bengali": "^5.1.0",

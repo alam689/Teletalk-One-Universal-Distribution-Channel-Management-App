@@ -1,6 +1,6 @@
 import { ApiError } from '../../lib/http'
 import { PASSWORD_POLICY, type PasswordPolicy } from './authTypes'
-import type { IdentityResult, SignInResult } from './authApi'
+import type { AuthTokens, IdentityResult, SignInResult } from './authApi'
 import { findAccount, sessionFor } from './demoAccounts'
 
 /**
@@ -89,6 +89,22 @@ export async function restoreSession(): Promise<SignInResult | null> {
   const account = findAccount(posCode)
   if (!account) return null
   return { session: sessionFor(account, trusted), tokens: tokens() }
+}
+
+/**
+ * Stands in for exchanging the httpOnly refresh cookie. Fails once the mock's
+ * session marker is gone, which is what "the cookie was revoked" looks like.
+ */
+export async function refreshTokens(): Promise<AuthTokens> {
+  await delay(300)
+  let posCode: string | null = null
+  try {
+    posCode = sessionStorage.getItem(SESSION_POS)
+  } catch {
+    posCode = null
+  }
+  if (!posCode) throw new ApiError('unauthorized', 401, 'sessionExpired')
+  return tokens()
 }
 
 export async function signOut(): Promise<void> {

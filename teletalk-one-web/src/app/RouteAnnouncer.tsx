@@ -22,7 +22,15 @@ export function RouteAnnouncer() {
   const first = useRef(true)
 
   useEffect(() => {
-    const key = TITLES[pathname] ?? (pathname.startsWith('/services/') ? 'nav.services' : null)
+    // A module or flow route announces the service by name, not "Services" —
+    // a retailer switching tabs mid-activation needs to see which one it is.
+    // An unknown id falls back rather than announcing a raw i18n key.
+    const moduleId = pathname.startsWith('/services/') ? pathname.slice('/services/'.length) : ''
+    const itemKey = moduleId && !moduleId.includes('/') ? `item.${moduleId}` : null
+    const key =
+      TITLES[pathname] ??
+      (itemKey && t(itemKey) !== itemKey ? itemKey : null) ??
+      (pathname.startsWith('/services/') ? 'nav.services' : null)
     const name = key ? t(key) : ''
     document.title = name ? `${name} — ${t('app.name')}` : t('app.name')
 

@@ -1,5 +1,6 @@
 import { env } from '../../env'
-import { ApiError, request, setAccessToken } from '../../lib/http'
+import { ApiError, call, setAccessToken } from '../../lib/http'
+import { API_ROUTES } from '../../lib/apiRoutes'
 import * as mock from './authMock'
 
 export type { Capability, Role, Session, Bilingual, PasswordPolicy } from './authTypes'
@@ -32,11 +33,7 @@ export interface SignInResult {
 
 export async function lookupPos(posCode: string, signal?: AbortSignal): Promise<IdentityResult> {
   if (env.useMockApi) return mock.lookupPos(posCode)
-  return request<IdentityResult>('/auth/identity', {
-    method: 'POST',
-    body: { posCode },
-    signal,
-  })
+  return call<IdentityResult>(API_ROUTES.authIdentity, { body: { posCode }, signal })
 }
 
 export async function verifyPassword(
@@ -45,16 +42,12 @@ export async function verifyPassword(
   signal?: AbortSignal,
 ): Promise<void> {
   if (env.useMockApi) return mock.verifyPassword(posCode, password)
-  await request<void>('/auth/password', {
-    method: 'POST',
-    body: { posCode, password },
-    signal,
-  })
+  await call<void>(API_ROUTES.authPassword, { body: { posCode, password }, signal })
 }
 
 export async function requestOtp(posCode: string, signal?: AbortSignal): Promise<void> {
   if (env.useMockApi) return mock.requestOtp(posCode)
-  await request<void>('/auth/otp', { method: 'POST', body: { posCode }, signal })
+  await call<void>(API_ROUTES.authOtp, { body: { posCode }, signal })
 }
 
 export async function verifyOtp(
@@ -64,8 +57,7 @@ export async function verifyOtp(
   signal?: AbortSignal,
 ): Promise<SignInResult> {
   if (env.useMockApi) return mock.verifyOtp(posCode, otp, trustDevice)
-  const result = await request<SignInResult>('/auth/verify', {
-    method: 'POST',
+  const result = await call<SignInResult>(API_ROUTES.authVerify, {
     body: { posCode, otp, trustDevice },
     signal,
   })
@@ -82,7 +74,7 @@ export async function restoreSession(signal?: AbortSignal): Promise<SignInResult
   try {
     const result = env.useMockApi
       ? await mock.restoreSession()
-      : await request<SignInResult>('/auth/session', { signal })
+      : await call<SignInResult>(API_ROUTES.authSession, { signal })
     if (result) setAccessToken(result.tokens.accessToken)
     return result
   } catch (err) {
@@ -93,10 +85,22 @@ export async function restoreSession(signal?: AbortSignal): Promise<SignInResult
   }
 }
 
+/**
+ * Proactive refresh. Returns tokens only — never a session — so a refresh
+ * cannot quietly change who the client thinks it is signed in as.
+ */
+export async function refreshTokens(signal?: AbortSignal): Promise<AuthTokens> {
+  const result = env.useMockApi
+    ? await mock.refreshTokens()
+    : await call<AuthTokens>(API_ROUTES.authRefresh, { retries: 0, signal })
+  setAccessToken(result.accessToken)
+  return result
+}
+
 export async function signOut(): Promise<void> {
   try {
     if (env.useMockApi) await mock.signOut()
-    else await request<void>('/auth/signout', { method: 'POST', retries: 0 })
+    else await call<void>(API_ROUTES.authSignOut, { retries: 0 })
   } finally {
     // Local state is cleared even if the server call fails — the user asked to
     // leave, and a shared counter terminal must not stay signed in.
@@ -110,8 +114,7 @@ export async function changePassword(
   signal?: AbortSignal,
 ): Promise<void> {
   if (env.useMockApi) return mock.changePassword(current, next)
-  await request<void>('/account/password', {
-    method: 'POST',
+  await call<void>(API_ROUTES.accountPassword, {
     body: { currentPassword: current, newPassword: next },
     signal,
   })
