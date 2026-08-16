@@ -17,6 +17,15 @@ cd teletalk-one-web       && npm install && npm run dev      # portal, :5173
 cd teletalk-one-retailer  && npm install && npm start        # retailer app
 ```
 
+**Live demo of the retailer app** —
+<https://alam689.github.io/Teletalk-One-Universal-Distribution-Channel-Management-App/>
+
+That is the app's web target, built by GitHub Actions on every push that
+touches `teletalk-one-retailer/`. It runs against the in-repo mocks, holds
+itself to a handset column on a wide screen, and contains no live customer
+data. It is a way to open the work in a browser, not a release: the real
+targets are Android and iOS.
+
 Sign in with POS `20060794`, password `Tele@1234`, OTP `123456`. The portal's
 README lists an account for each of the thirteen roles.
 

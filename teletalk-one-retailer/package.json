@@ -42,7 +42,10 @@
     "i18n:check": "node scripts/check-locales.mjs",
     "contract:check": "node scripts/check-contract.mjs",
     "test": "jest",
-    "verify": "npm run typecheck && npm run i18n:check && npm run contract:check && npm run test"
+    "verify": "npm run typecheck && npm run i18n:check && npm run contract:check && npm run test",
+    "export:web": "expo export --platform web --output-dir dist",
+    "pages": "node scripts/pages.mjs",
+    "build:pages": "npm run export:web && npm run pages"
   },
   "private": true,
   "jest": {

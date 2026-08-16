@@ -187,6 +187,48 @@ Everything else has been verified by driving the app in the browser target
 and the outbox reporting it confirmed. There is no device-farm run yet, and
 nothing here has been in a shop.
 
+## The GitHub Pages build
+
+`.github/workflows/pages.yml` builds the web target and publishes it on every
+push that touches this app:
+
+<https://alam689.github.io/Teletalk-One-Universal-Distribution-Channel-Management-App/>
+
+**One manual step, once:** in the repository's *Settings → Pages*, set
+**Source** to **GitHub Actions**. Until that is done the workflow builds
+successfully and the deploy step fails, which reads as a broken build and is
+not one.
+
+Three things that Pages needs and Expo does not produce, each handled in
+`scripts/pages.mjs` because each fails in a way that looks like a broken app
+rather than a hosting problem:
+
+- **`.nojekyll`** — Pages runs Jekyll, and Jekyll silently drops every
+  directory starting with an underscore. Expo puts the whole bundle in
+  `_expo/`. Without this the page loads and the app never boots.
+- **`404.html`** — a copy of `index.html`, because this is a single page and
+  Pages has no rewrite rule. Without it, a reload on any path 404s.
+- **`lang="bn"`** — Expo hard-codes `lang="en"` into the shell, and the
+  attribute is what a screen reader picks a voice from and a browser picks a
+  font fallback from. Bangla through an English fallback is where matras go
+  missing.
+
+The sub-path is the fourth. A project site is served from
+`/<repo-name>/`, and Expo writes absolute asset URLs, so the workflow sets
+`EXPO_PUBLIC_BASE_URL` and `app.config.js` turns that into
+`experiments.baseUrl`. It is deliberately **not** in `app.json`: a base path
+baked in there would break `npm start` and every native build, because a native
+bundle reads its assets off the device and has no base path at all.
+
+On a screen wider than 560px the web build holds itself to a 430pt handset
+column. Every layout decision in this app assumes a phone, and stretched across
+a monitor the three-column grid becomes a field of tiny icons two metres apart
+— which misrepresents the product to whoever is reviewing it. On a device that
+wrapper renders nothing.
+
+The workflow runs `npm run verify` before it exports. A green deploy of a red
+build is worse than no deploy: it publishes something nobody checked.
+
 ## What is NOT built
 
 1. **All backend integration.** BVS, EC/NID, CBS, DMS, Telepay/EVC, ERP, MNP,

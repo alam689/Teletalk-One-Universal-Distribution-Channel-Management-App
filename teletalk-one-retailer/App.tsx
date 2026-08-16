@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, Platform, useWindowDimensions, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { I18nextProvider } from 'react-i18next'
@@ -51,7 +51,14 @@ export default function App() {
     // not been read yet. It is on screen for a few hundred milliseconds; a
     // flash of the wrong ground is better than a flash of nothing.
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: light.paper }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: light.paper,
+        }}
+      >
         <ActivityIndicator color={light.brand} />
       </View>
     )
@@ -63,11 +70,51 @@ export default function App() {
         <ThemeProvider>
           <AuthProvider>
             <ThemedStatusBar />
-            <RootNavigator />
+            <Handset>
+              <RootNavigator />
+            </Handset>
           </AuthProvider>
         </ThemeProvider>
       </I18nextProvider>
     </SafeAreaProvider>
+  )
+}
+
+/**
+ * Holds the app to a handset column on a wide screen.
+ *
+ * Only on web, and only above 560px. This app is built for a phone and every
+ * layout decision in it assumes one; stretched across a 1920px monitor the
+ * three-column grid becomes a field of tiny icons two metres apart, which
+ * misrepresents the product to anyone reviewing it in a browser — including on
+ * the GitHub Pages build, where a browser is the only way to see it.
+ *
+ * On a real device this renders nothing: `Platform.OS` is not 'web', so the
+ * children come straight through.
+ */
+function Handset({ children }: { children: React.ReactNode }) {
+  const { width } = useWindowDimensions()
+  const { colors } = useTheme()
+
+  if (Platform.OS !== 'web' || width < 560) return <>{children}</>
+
+  return (
+    <View style={{ flex: 1, alignItems: 'center', backgroundColor: colors.surface2 }}>
+      <View
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: 430,
+          backgroundColor: colors.paper,
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderColor: colors.ruleSoft,
+          overflow: 'hidden',
+        }}
+      >
+        {children}
+      </View>
+    </View>
   )
 }
 

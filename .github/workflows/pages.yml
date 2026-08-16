@@ -1,0 +1,74 @@
+name: Deploy retailer app to GitHub Pages
+
+# The retailer app's web target, published so the work can be opened in a
+# browser without an Android build. It is a demo of the frontend against the
+# in-repo mocks: no API is configured, and `env.ts` logs loudly if a production
+# build ever finds itself without one.
+#
+# Nothing here touches the management portal — that is a separate app with a
+# separate build, and publishing both from one workflow would mean one of them
+# breaking the other's deploy.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'teletalk-one-retailer/**'
+      - '.github/workflows/pages.yml'
+  # So a deploy can be re-run from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. `cancel-in-progress: false` because cancelling a deploy
+# halfway can leave Pages serving a half-uploaded artifact.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: teletalk-one-retailer
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: teletalk-one-retailer/package-lock.json
+
+      - run: npm ci
+
+      # The same gate that runs locally. A green Pages deploy of a red build
+      # would be worse than no deploy: it publishes something nobody checked.
+      - name: Verify
+        run: npm run verify
+
+      - name: Export web
+        env:
+          # GitHub Pages serves a project site from a sub-path, so every asset
+          # URL needs that prefix. See app.config.js — this variable is the
+          # only thing that switches it on.
+          EXPO_PUBLIC_BASE_URL: /${{ github.event.repository.name }}
+        run: npm run build:pages
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: teletalk-one-retailer/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
