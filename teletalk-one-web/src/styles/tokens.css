@@ -16,9 +16,9 @@
 
 :root {
   /* grounds & ink */
-  --paper: #f1f8f4;
-  --paper-glow: radial-gradient(900px 520px at 10% -8%, rgba(0, 184, 77, 0.11), transparent 62%),
-    radial-gradient(760px 420px at 96% 2%, rgba(0, 150, 136, 0.07), transparent 58%);
+  --paper: #f2f6f3;
+  --paper-glow: radial-gradient(1100px 560px at 12% -10%, rgba(0, 150, 70, 0.09), transparent 62%),
+    radial-gradient(820px 460px at 98% 0%, rgba(214, 170, 60, 0.06), transparent 60%);
   --surface: #ffffff;
   --surface-2: #eef6f1;
   --surface-3: #e6f2eb;
@@ -40,12 +40,29 @@
   --brand-hover: #096540;
   --brand-ink: #ffffff;
   --brand-wash: #e4f4ea;
-  --brand-panel: #0b7a4f;
+  --brand-panel: #0c5c3a;
   --on-brand: #ffffff;
   --on-brand-soft: rgba(255, 255, 255, 0.93);
 
+  /* The MyTeletalk campaign ground: deep forest green lit from the upper
+     right, with two faint diagonal light streaks (the "road" in the App Store
+     plate). Carries the top bar, page heads and the hero figure.
+     --hero is the LIGHTEST point of the stack and is what the contrast gate
+     measures white text against; every layer of --hero-bg only darkens it
+     or sits away from the text column. */
+  --hero: #11683f;
+  --hero-bg: radial-gradient(70% 140% at 92% -20%, rgba(76, 200, 110, 0.32), transparent 58%),
+    linear-gradient(112deg, transparent 63%, rgba(255, 255, 255, 0.07) 63.2%, transparent 64.6%),
+    linear-gradient(112deg, transparent 70%, rgba(255, 255, 255, 0.05) 70.2%, transparent 71.4%),
+    linear-gradient(135deg, #062f1e 0%, #0a4a2f 48%, #11683f 100%);
+  --hero-rule: rgba(255, 255, 255, 0.14);
+  --hero-glass: rgba(255, 255, 255, 0.1);
+  --hero-glass-strong: rgba(255, 255, 255, 0.18);
+  --brand-grad: linear-gradient(135deg, #0e8a57 0%, #0b7a4f 55%, #086240 100%);
+
   /* Teletalk campaign gold — a rule or a bullet on green, never text */
   --accent-yellow: #ffd34d;
+  --gold: #e9b93a;
 
   /* Category palette. 62 identical green wells are unscannable — a retailer
      hunting for "commission" should be able to aim at a colour first and read
@@ -111,13 +128,14 @@
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-xl: 26px;
   --radius-pill: 999px;
 
   /* Green-tinted shadows: a neutral grey shadow reads dirty over mint. */
-  --shadow-sm: 0 1px 2px rgba(8, 48, 32, 0.04), 0 3px 10px -4px rgba(8, 48, 32, 0.07);
-  --shadow: 0 2px 4px rgba(8, 48, 32, 0.04), 0 14px 32px -16px rgba(8, 48, 32, 0.18);
-  --shadow-lg: 0 4px 8px rgba(8, 48, 32, 0.05), 0 28px 56px -28px rgba(8, 48, 32, 0.3);
+  --shadow-sm: 0 1px 2px rgba(6, 40, 26, 0.05), 0 6px 16px -8px rgba(6, 40, 26, 0.1);
+  --shadow: 0 1px 3px rgba(6, 40, 26, 0.05), 0 18px 40px -20px rgba(6, 40, 26, 0.24);
+  --shadow-lg: 0 4px 10px rgba(6, 40, 26, 0.06), 0 34px 70px -30px rgba(6, 40, 26, 0.38);
+  --shadow-hero: 0 2px 6px rgba(6, 40, 26, 0.12), 0 30px 60px -28px rgba(6, 47, 30, 0.6);
 
   --tap-min: 44px;
 }
@@ -160,7 +178,18 @@ html[lang='en'] {
   --on-brand: #ffffff;
   --on-brand-soft: rgba(255, 255, 255, 0.93);
 
+  --hero: #0d5535;
+  --hero-bg: radial-gradient(70% 140% at 92% -20%, rgba(76, 200, 110, 0.22), transparent 58%),
+    linear-gradient(112deg, transparent 63%, rgba(255, 255, 255, 0.06) 63.2%, transparent 64.6%),
+    linear-gradient(112deg, transparent 70%, rgba(255, 255, 255, 0.04) 70.2%, transparent 71.4%),
+    linear-gradient(135deg, #04201a 0%, #073b27 48%, #0d5535 100%);
+  --hero-rule: rgba(255, 255, 255, 0.12);
+  --hero-glass: rgba(255, 255, 255, 0.08);
+  --hero-glass-strong: rgba(255, 255, 255, 0.15);
+  --brand-grad: linear-gradient(135deg, #56dd94 0%, #3fd183 100%);
+
   --accent-yellow: #ffd34d;
+  --gold: #e9b93a;
 
   --cat-sim-well: #12332a;
   --cat-sim-ink: #4ecf94;
@@ -196,4 +225,5 @@ html[lang='en'] {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 36px -18px rgba(0, 0, 0, 0.85);
   --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 32px 64px -30px rgba(0, 0, 0, 0.95);
+  --shadow-hero: 0 2px 6px rgba(0, 0, 0, 0.4), 0 30px 60px -28px rgba(0, 0, 0, 0.9);
 }

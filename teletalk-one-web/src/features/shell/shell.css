@@ -16,17 +16,49 @@
   gap: var(--space-3);
   padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-6));
   padding-top: max(var(--space-3), env(safe-area-inset-top));
-  /* Frosted rather than solid, so the mint ground reads through on scroll. */
-  background-color: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-block-end: 1px solid var(--rule-soft);
-  box-shadow: var(--shadow-sm);
+  /* The campaign ground, as on the MyTeletalk plate. Colour first so a
+     gradient that fails to paint never leaves white text on the page ground. */
+  background-color: var(--hero);
+  background-image: var(--hero-bg);
+  color: var(--on-brand);
+  border-block-end: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 30px -18px rgba(6, 47, 30, 0.75);
+}
+
+/* A hairline of campaign gold along the bottom edge — the one place the
+   accent appears in the chrome. Decorative; carries no meaning. */
+.topbar::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 18%, var(--brand-bright) 60%, transparent 100%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.topbar .iconbtn {
+  color: var(--on-brand-soft);
+}
+
+.topbar .iconbtn:hover {
+  background: var(--hero-glass);
+  color: var(--on-brand);
+}
+
+.topbar .iconbtn__badge {
+  background: var(--gold);
+  border-color: var(--hero);
+}
+
+.topbar :focus-visible {
+  outline-color: var(--on-brand);
 }
 
 .topbar__brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-3);
   padding: var(--space-2);
   margin-inline-start: calc(var(--space-2) * -1);
@@ -47,17 +79,40 @@
   }
 }
 
+.topbar__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 11px;
+  /* The app-icon tile from the plate: bright Teletalk green, white swoosh. */
+  background: linear-gradient(150deg, #3cc163 0%, #18a04b 55%, #0f8a3f 100%);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+}
+
+.topbar__name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
 .topbar__wordmark {
   font-size: var(--fs-lg);
-  font-weight: 600;
-  color: var(--brand);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--on-brand);
   line-height: var(--lh-tight);
   white-space: nowrap;
 }
 
 .topbar__pos {
-  font-size: var(--fs-xs);
-  color: var(--muted);
+  font-size: 0.7rem;
+  color: var(--on-brand-soft);
+  opacity: 0.85;
 }
 
 /* Desktop primary nav; the mobile equivalent is .bottomnav */
@@ -74,20 +129,24 @@
   min-height: 38px;
   padding: 0 var(--space-4);
   border-radius: var(--radius-pill);
-  color: var(--ink-soft);
+  color: var(--on-brand-soft);
   font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .topnav__link:hover {
-  background: var(--surface-2);
+  background: var(--hero-glass);
+  color: var(--on-brand);
 }
 
+/* Active reads like the plate's white "download" pill: solid white, green ink. */
 .topnav__link.is-active {
-  background: var(--brand-wash);
-  color: var(--brand);
+  background: #ffffff;
+  color: #0a4a2f;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.55);
 }
 
 .topbar__actions {
@@ -108,31 +167,30 @@
   align-items: center;
   gap: var(--space-2);
   min-height: var(--tap-min);
-  padding: var(--space-1) var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--rule-soft);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  background: var(--hero-glass);
+  border: 1px solid var(--hero-rule);
   border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-sm);
-  color: var(--ink);
+  color: var(--on-brand);
   cursor: pointer;
+  transition: background-color 0.18s ease;
 }
 
 .account__trigger:hover {
-  background: var(--surface-2);
+  background: var(--hero-glass-strong);
 }
 
 .account__avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  /* Both stops must pass against --brand-ink, so the gradient runs
-     brand-hover → brand. --brand-bright would put the initial at 2.6:1. */
-  background-color: var(--brand);
-  background-image: linear-gradient(145deg, var(--brand-hover), transparent 70%);
-  color: var(--brand-ink);
+  /* Gold coin on green: the initial is dark ink on gold, well past 4.5:1. */
+  background: linear-gradient(150deg, #f6d36b 0%, var(--gold) 60%, #c9962a 100%);
+  color: #2b2208;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   font-size: var(--fs-sm);
   font-weight: 600;
   flex: none;
@@ -159,6 +217,7 @@
   border: 1px solid var(--rule-soft);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  color: var(--ink);
 }
 
 .account__head {
@@ -290,8 +349,10 @@
   }
 
   .bottomnav__link.is-active {
-    color: var(--brand);
-    background: var(--brand-wash);
+    color: var(--on-brand);
+    background-color: var(--hero);
+    background-image: var(--hero-bg);
+    box-shadow: 0 8px 18px -10px rgba(6, 47, 30, 0.8);
   }
 }
 

@@ -8,7 +8,7 @@
   /* Never a fixed height: Bangla runs taller than Latin. */
   min-height: var(--tap-min);
   padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-size: var(--fs-base);
   font-weight: 600;
@@ -28,13 +28,14 @@
 }
 
 .btn--primary {
-  background: var(--brand);
+  background-color: var(--brand);
+  background-image: var(--brand-grad);
   color: var(--brand-ink);
-  box-shadow: 0 6px 18px -8px var(--focus-glow);
+  box-shadow: 0 10px 22px -10px rgba(6, 74, 44, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--brand-hover);
-  box-shadow: 0 10px 24px -8px var(--focus-glow);
+  background-color: var(--brand-hover);
+  box-shadow: 0 14px 28px -10px rgba(6, 74, 44, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
 }
 

@@ -39,6 +39,8 @@ const PAIRS = [
   ['--brand-ink', '--brand', AA_TEXT, 'primary button label, pressed chip'],
   ['--on-brand', '--brand-panel', AA_TEXT, 'sign-in panel text'],
   ['--on-brand-soft', '--brand-panel', AA_TEXT, 'dimmed sign-in panel text'],
+  ['--on-brand', '--hero', AA_TEXT, 'top bar, page heads and hero figures'],
+  ['--on-brand-soft', '--hero', AA_TEXT, 'dimmed text on the hero ground'],
   ['--ok', '--ok-wash', AA_TEXT, 'settled pill, success alert'],
   ['--warn', '--warn-wash', AA_TEXT, 'queued pill, warning alert, offline banner'],
   ['--danger', '--danger-wash', AA_TEXT, 'failed pill, danger alert, field error'],

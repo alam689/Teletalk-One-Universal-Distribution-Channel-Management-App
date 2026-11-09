@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../components/Icon'
+import { TeletalkMark } from '../../components/TeletalkMark'
 import { applyLang } from '../../i18n'
 import type { Lang } from '../../i18n/format'
 import { useAuth, useSession } from '../auth/AuthProvider'
@@ -73,8 +74,13 @@ export function AppShell() {
 
       <header className="topbar">
         <NavLink to="/" className="topbar__brand" aria-label={t('nav.home')}>
-          <span className="topbar__wordmark">{t('app.name')}</span>
-          <span className="topbar__pos identifier">BD {session.posCode}</span>
+          <span className="topbar__mark" aria-hidden="true">
+            <TeletalkMark size={30} />
+          </span>
+          <span className="topbar__name">
+            <span className="topbar__wordmark">{t('app.name')}</span>
+            <span className="topbar__pos identifier">BD {session.posCode}</span>
+          </span>
         </NavLink>
 
         {/* Primary navigation, desktop only — mobile uses the bottom bar. */}

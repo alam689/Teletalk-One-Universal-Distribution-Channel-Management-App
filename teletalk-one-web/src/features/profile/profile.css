@@ -156,3 +156,45 @@
   font-size: var(--fs-xs);
   font-weight: 600;
 }
+
+/* ---------------------------- campaign banner ---------------------------
+   Same plate as every other screen head; the avatar becomes the gold coin
+   used in the top bar. */
+.profile__head {
+  padding: clamp(var(--space-5), 3.4vw, var(--space-7));
+  background-color: var(--hero);
+  background-image: var(--hero-bg);
+  color: var(--on-brand);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-hero);
+}
+
+.profile__head .profile__avatar {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(150deg, #f6d36b 0%, var(--gold) 60%, #c9962a 100%);
+  color: #2b2208;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 24px -10px rgba(0, 0, 0, 0.6);
+}
+
+.profile__head .profile__title {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
+  font-weight: 800;
+  color: var(--on-brand);
+}
+
+.profile__head .profile__sub {
+  color: var(--on-brand-soft);
+}
+
+.profile__head .rolebadge {
+  background: var(--hero-glass-strong);
+  color: var(--on-brand);
+}
+
+@media (max-width: 720px) {
+  .profile__head {
+    border-radius: var(--radius-lg);
+  }
+}
