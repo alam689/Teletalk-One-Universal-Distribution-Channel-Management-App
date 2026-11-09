@@ -21,6 +21,18 @@
     <link rel="apple-touch-icon" href="/teletalk-icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>টেলিটক ওয়ান</title>
+    <!-- GitHub Pages has no rewrite rule: a deep link like /portal/services is
+         answered by the site's 404.html, which bounces here as
+         /portal/?p=/services. Put the real path back before the router reads
+         it. A no-op everywhere else. -->
+    <script>
+      ;(function (l) {
+        var m = /[?&]p=([^&]*)/.exec(l.search)
+        if (!m) return
+        var rest = l.search.replace(/[?&]p=[^&]*/, '').replace(/^&/, '?')
+        history.replaceState(null, '', l.pathname.replace(/\/$/, '') + decodeURIComponent(m[1]) + rest + l.hash)
+      })(window.location)
+    </script>
   </head>
   <body>
     <div id="root"></div>

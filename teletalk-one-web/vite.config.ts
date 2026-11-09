@@ -3,6 +3,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  // GitHub Pages serves a project site from a sub-path (/<repo>/portal/), so
+  // every asset URL needs that prefix. Only the Pages workflow sets this;
+  // `npm run dev` and a plain build stay at '/'.
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [react()],
   server: { port: 5173 },
   build: {

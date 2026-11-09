@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Teletalk">
+  <title>Teletalk</title>
+
+  <!--
+    Teletalk app icon — green rounded square with the three-blade mark.
+
+    TRACED, NOT OFFICIAL. The blade curves are reconstructed from raster
+    reference images; the silhouette is close but the control points are not
+    the originals. Replace with the vector from Corporate Affairs before this
+    is used on a store listing or anything else public-facing.
+
+    Geometry note: the blades grow DOWNWARD (smallest top-left), each blade
+    crests at ~44% of its length and then falls to a hooked tip, and the tail
+    is a diagonal cut — not a vertical one.
+  -->
+
+  <rect width="512" height="512" rx="112" ry="112" fill="#6CBE45"/>
+
+  <!-- Mark, drawn in a 100-unit space and mapped into the icon's safe area. -->
+  <g transform="translate(41.5 42.65) scale(4.3)" fill="#FFFFFF">
+    <g transform="translate(13.6 4.4) scale(0.345 0.2935)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+    <g transform="translate(29.1 19) scale(0.549 0.5484)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+    <g transform="translate(23.6 49.8) scale(0.636 0.7339)">
+      <path d="M14 18 C 24 -5 62 -11 100 30 C 74 41 32 49 0 62 Z"/>
+    </g>
+  </g>
+</svg>

@@ -178,6 +178,9 @@ export const router = createBrowserRouter(
     },
   ],
   {
+    // Vite's base ('/' locally, '/<repo>/portal/' on GitHub Pages), without the
+    // trailing slash React Router doesn't want.
+    basename: import.meta.env.BASE_URL.replace(/\/+$/, '') || '/',
     // Opt in early so the v7 upgrade is a version bump, not a behaviour change.
     // v7_startTransition belongs on <RouterProvider>, not here.
     future: {

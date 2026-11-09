@@ -1,0 +1,2 @@
+import{r as e}from"./react-BTLhCrjX.js";import{i as p}from"./index-DcoMyd07.js";function R(l,o){const[c,f]=e.useState(null),[i,s]=e.useState(null),[d,a]=e.useState(!0),[b,g]=e.useState(0),u=e.useRef(o);u.current=o,e.useEffect(()=>{const t=new AbortController;let r=!0;return a(!0),s(null),u.current(t.signal).then(n=>{r&&f(n)}).catch(n=>{!r||t.signal.aborted||s(p(n))}).finally(()=>{r&&a(!1)}),()=>{r=!1,t.abort()}},[l,b]);const m=e.useCallback(()=>g(t=>t+1),[]);return{data:c,error:i,loading:d,reload:m}}export{R as u};
+//# sourceMappingURL=useResource-CzVhcQrz.js.map

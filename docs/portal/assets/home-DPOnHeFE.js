@@ -1,0 +1,2 @@
+import{j as s,I as o}from"./index-DcoMyd07.js";import{r as n}from"./react-BTLhCrjX.js";import{u as r}from"./i18n-DbIYy4dh.js";const u=n.memo(function({item:e,big:t=!1,onOpen:a}){const{t:i}=r();return s.jsxs("button",{type:"button",className:`tile${t?" tile--big":""}`,"data-cat":e.group,onClick:a,children:[s.jsx("span",{className:"tile__icon",children:s.jsx(o,{name:e.icon,size:t?26:22})}),s.jsx("span",{className:"tile__label",children:i(`item.${e.id}`)})]})});export{u as S};
+//# sourceMappingURL=home-DPOnHeFE.js.map

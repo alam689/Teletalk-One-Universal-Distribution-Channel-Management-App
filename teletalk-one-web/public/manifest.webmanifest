@@ -2,8 +2,8 @@
   "name": "টেলিটক ওয়ান — ব্যবস্থাপনা পোর্টাল",
   "short_name": "টেলিটক ওয়ান",
   "description": "Teletalk One — distribution channel management portal",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f1f8f4",
@@ -13,7 +13,7 @@
   "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "/teletalk-icon.svg",
+      "src": "teletalk-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
